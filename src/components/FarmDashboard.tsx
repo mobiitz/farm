@@ -112,8 +112,8 @@ export function FarmDashboard() {
               value={farm.stakeInput}
               onValueChange={farm.setStakeInput}
               onMax={farm.fillMaxStake}
-              primaryActionLabel="Stake LP"
-              secondaryActionLabel={farm.hasApproval ? "LP Approved" : "Approve LP"}
+              primaryActionLabel="Step 2. Stake LP"
+              secondaryActionLabel={farm.hasApproval ? "Step 1. LP Approved" : "Step 1. Approve LP"}
               onPrimaryAction={farm.stakeLp}
               onSecondaryAction={farm.approveLp}
               primaryDisabled={farm.busy || !farm.account}
