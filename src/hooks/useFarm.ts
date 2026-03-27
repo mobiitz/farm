@@ -520,6 +520,16 @@ export function useFarm(): FarmState {
   }, [account, refreshData]);
 
   useEffect(() => {
+    if (!account) {
+      return;
+    }
+
+    const nextValue = formatUnitsSafe(walletTokenBalance, farmConfig.tokenDecimals, 8);
+    setLiquidityTokenInput(nextValue);
+    setLiquidityQuoteInput(quoteFromTokenInput(nextValue));
+  }, [account, quoteFromTokenInput, walletTokenBalance]);
+
+  useEffect(() => {
     const eth = window.ethereum;
 
     if (!eth) {
