@@ -22,10 +22,17 @@ export function WalletActions({
   connected,
   onRefresh,
 }: WalletActionsProps) {
+  const logoSrc = `${import.meta.env.BASE_URL}MBTC_light.png`;
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
       <Card>
         <CardHeader className="space-y-3">
+          <img
+            src={logoSrc}
+            alt="MAGA Bitcoin logo"
+            className="h-14 w-auto rounded-lg object-contain sm:h-16"
+          />
           <div className="flex flex-wrap items-center gap-2">
             <Badge>Live Farm</Badge>
             <Badge variant="secondary">{chainName}</Badge>
