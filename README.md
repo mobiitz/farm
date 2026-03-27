@@ -104,6 +104,22 @@ npm run build
 npm run preview
 ```
 
+## GitHub Pages
+
+This repo is configured for GitHub Pages at:
+
+```text
+https://mobiitz.github.io/farm/
+```
+
+To deploy it:
+
+1. Push the repo to the `main` branch on GitHub.
+2. In GitHub, go to `Settings -> Pages`.
+3. Under `Build and deployment`, set `Source` to `GitHub Actions`.
+4. In `Settings -> Secrets and variables -> Actions -> Variables`, add the `VITE_...` values from your local `.env`.
+5. Push again or run the `Deploy to GitHub Pages` workflow manually from the `Actions` tab.
+
 ## Environment Variables
 
 All runtime configuration is read from Vite env vars:
