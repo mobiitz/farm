@@ -18,7 +18,7 @@ export function FarmDashboard() {
   const farm = useFarm();
 
   return (
-    <div className="min-h-screen bg-slate-950 bg-farm-grid px-4 py-6 text-slate-50 sm:px-6 sm:py-8 md:px-10 md:py-10">
+    <div className="min-h-screen min-h-[calc(var(--app-height,1vh)*100)] overflow-x-hidden bg-slate-950 bg-farm-grid px-4 py-6 text-slate-50 sm:px-6 sm:py-8 md:px-10 md:py-10">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-amber-300/10 to-transparent" />
       <div className="relative mx-auto grid max-w-6xl gap-4 sm:gap-6">
         <div className="grid gap-4 md:grid-cols-[1.4fr_0.6fr]">
