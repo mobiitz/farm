@@ -37,7 +37,7 @@ jobs:
       - name: Write environment file
         run: |
           cat <<'EOF' > .env.production
-          ${{ vars.env }}
+          ${{ vars.ENV }}
           EOF
 
       - name: Build
