@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BrowserProvider, JsonRpcSigner, MaxUint256, type Eip1193Provider } from "ethers";
-import { useAccount } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { farmConfig } from "@/lib/config";
 import {
   getLpReadContract,
@@ -61,6 +61,30 @@ export type FarmState = {
 
 export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
+  const { data: walletTokenBalanceData } = useBalance({
+    address,
+    token: farmConfig.tokenAddress as `0x${string}`,
+    query: {
+      enabled: Boolean(address),
+      refetchInterval: 10000,
+    },
+  });
+  const { data: walletQuoteTokenBalanceData } = useBalance({
+    address,
+    token: farmConfig.quoteTokenAddress as `0x${string}`,
+    query: {
+      enabled: Boolean(address),
+      refetchInterval: 10000,
+    },
+  });
+  const { data: walletLpBalanceData } = useBalance({
+    address,
+    token: farmConfig.lpTokenAddress as `0x${string}`,
+    query: {
+      enabled: Boolean(address),
+      refetchInterval: 10000,
+    },
+  });
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [account, setAccount] = useState("");
@@ -156,15 +180,18 @@ export function useFarm(): FarmState {
         pairRead.getReserves(),
       ]);
 
-      if (walletLpBalanceResult.status === "fulfilled") {
+      if (walletLpBalanceResult.status === "fulfilled" && !walletLpBalanceData) {
         setWalletLpBalance(walletLpBalanceResult.value as bigint);
       }
 
-      if (walletTokenBalanceResult.status === "fulfilled") {
+      if (walletTokenBalanceResult.status === "fulfilled" && !walletTokenBalanceData) {
         setWalletTokenBalance(walletTokenBalanceResult.value as bigint);
       }
 
-      if (walletQuoteTokenBalanceResult.status === "fulfilled") {
+      if (
+        walletQuoteTokenBalanceResult.status === "fulfilled" &&
+        !walletQuoteTokenBalanceData
+      ) {
         setWalletQuoteTokenBalance(walletQuoteTokenBalanceResult.value as bigint);
       }
 
@@ -231,7 +258,36 @@ export function useFarm(): FarmState {
         error instanceof Error ? error.message : "Failed to refresh contract data.";
       setStatus(message);
     }
-  }, [account, lpRead, pairRead, provider, quoteTokenRead, rewardsRead, tokenRead]);
+  }, [
+    account,
+    lpRead,
+    pairRead,
+    provider,
+    quoteTokenRead,
+    rewardsRead,
+    tokenRead,
+    walletLpBalanceData,
+    walletQuoteTokenBalanceData,
+    walletTokenBalanceData,
+  ]);
+
+  useEffect(() => {
+    if (walletTokenBalanceData?.value != null) {
+      setWalletTokenBalance(walletTokenBalanceData.value);
+    }
+  }, [walletTokenBalanceData?.value]);
+
+  useEffect(() => {
+    if (walletQuoteTokenBalanceData?.value != null) {
+      setWalletQuoteTokenBalance(walletQuoteTokenBalanceData.value);
+    }
+  }, [walletQuoteTokenBalanceData?.value]);
+
+  useEffect(() => {
+    if (walletLpBalanceData?.value != null) {
+      setWalletLpBalance(walletLpBalanceData.value);
+    }
+  }, [walletLpBalanceData?.value]);
 
   const quoteFromTokenInput = useCallback((value: string) => {
     const amountIn = parseInputToUnitsSafe(value, farmConfig.tokenDecimals);
