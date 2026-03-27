@@ -25,7 +25,7 @@ export function FarmDashboard() {
         <div className="grid gap-4 md:grid-cols-[1.4fr_0.6fr]">
           <WalletActions
             chainName={farmConfig.chainName}
-            title={`${farmConfig.projectName} LP Farm`}
+            title={`${farmConfig.projectName} Farm`}
             description={`Add liquidity, stake your ${farmConfig.lpSymbol}, and earn ${farmConfig.tokenSymbol} rewards over time.`}
             accountLabel={farm.account ? shortAddress(farm.account) : "Connect Wallet"}
             busy={farm.busy}

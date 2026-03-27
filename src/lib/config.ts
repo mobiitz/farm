@@ -1,9 +1,19 @@
 function getEnv(name: string, fallback: string) {
-  return import.meta.env[name] ?? fallback;
+  const raw = import.meta.env[name];
+  if (typeof raw !== "string") {
+    return fallback;
+  }
+
+  const normalized = raw.trim();
+  return normalized.length > 0 ? normalized : fallback;
 }
 
 function getNumberEnv(name: string, fallback: number) {
   const raw = import.meta.env[name];
+  if (typeof raw !== "string" || raw.trim().length === 0) {
+    return fallback;
+  }
+
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
