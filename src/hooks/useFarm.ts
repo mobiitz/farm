@@ -30,24 +30,30 @@ export type FarmState = {
   allowance: bigint;
   tokenAllowanceToRouter: bigint;
   quoteTokenAllowanceToRouter: bigint;
+  lpAllowanceToRouter: bigint;
   totalStaked: bigint;
   pairTokenReserve: bigint;
   pairQuoteReserve: bigint;
   liquidityTokenInput: string;
   liquidityQuoteInput: string;
+  removeLiquidityInput: string;
   stakeInput: string;
   withdrawInput: string;
   hasApproval: boolean;
   hasLiquidityTokenApproval: boolean;
   hasLiquidityQuoteApproval: boolean;
+  hasRemoveLiquidityApproval: boolean;
   setLiquidityTokenInput: (value: string) => void;
   setLiquidityQuoteInput: (value: string) => void;
+  setRemoveLiquidityInput: (value: string) => void;
   setStakeInput: (value: string) => void;
   setWithdrawInput: (value: string) => void;
   refreshData: () => Promise<void>;
   approveTokenForRouter: () => Promise<void>;
   approveQuoteTokenForRouter: () => Promise<void>;
+  approveLpForRouter: () => Promise<void>;
   addLiquidity: () => Promise<void>;
+  removeLiquidity: () => Promise<void>;
   approveLp: () => Promise<void>;
   stakeLp: () => Promise<void>;
   withdrawLp: () => Promise<void>;
@@ -55,6 +61,7 @@ export type FarmState = {
   exitFarm: () => Promise<void>;
   fillMaxLiquidityToken: () => void;
   fillMaxLiquidityQuote: () => void;
+  fillMaxRemoveLiquidity: () => void;
   fillMaxStake: () => void;
   fillMaxWithdraw: () => void;
 };
@@ -101,12 +108,14 @@ export function useFarm(): FarmState {
   const [allowance, setAllowance] = useState(0n);
   const [tokenAllowanceToRouter, setTokenAllowanceToRouter] = useState(0n);
   const [quoteTokenAllowanceToRouter, setQuoteTokenAllowanceToRouter] = useState(0n);
+  const [lpAllowanceToRouter, setLpAllowanceToRouter] = useState(0n);
   const [totalStaked, setTotalStaked] = useState(0n);
   const [pairTokenReserve, setPairTokenReserve] = useState(0n);
   const [pairQuoteReserve, setPairQuoteReserve] = useState(0n);
 
   const [liquidityTokenInput, setLiquidityTokenInput] = useState("");
   const [liquidityQuoteInput, setLiquidityQuoteInput] = useState("");
+  const [removeLiquidityInput, setRemoveLiquidityInput] = useState("");
   const [stakeInput, setStakeInput] = useState("");
   const [withdrawInput, setWithdrawInput] = useState("");
 
@@ -159,6 +168,7 @@ export function useFarm(): FarmState {
         allowanceResult,
         tokenAllowanceToRouterResult,
         quoteTokenAllowanceToRouterResult,
+        lpAllowanceToRouterResult,
         totalStakedResult,
         pairToken0Result,
         pairToken1Result,
@@ -174,6 +184,7 @@ export function useFarm(): FarmState {
         lpRead.allowance(account, farmConfig.rewardsContractAddress),
         tokenRead.allowance(account, farmConfig.v2RouterAddress),
         quoteTokenRead.allowance(account, farmConfig.v2RouterAddress),
+        lpRead.allowance(account, farmConfig.v2RouterAddress),
         rewardsRead.totalSupply(),
         pairRead.token0(),
         pairRead.token1(),
@@ -221,6 +232,10 @@ export function useFarm(): FarmState {
 
       if (quoteTokenAllowanceToRouterResult.status === "fulfilled") {
         setQuoteTokenAllowanceToRouter(quoteTokenAllowanceToRouterResult.value as bigint);
+      }
+
+      if (lpAllowanceToRouterResult.status === "fulfilled") {
+        setLpAllowanceToRouter(lpAllowanceToRouterResult.value as bigint);
       }
 
       if (totalStakedResult.status === "fulfilled") {
@@ -385,6 +400,27 @@ export function useFarm(): FarmState {
     }
   }, [quoteTokenWrite, refreshData]);
 
+  const approveLpForRouter = useCallback(async () => {
+    if (!lpWrite) {
+      setStatus("Connect wallet first.");
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setStatus(`Approving ${farmConfig.lpSymbol} for the V2 router...`);
+      const tx = await lpWrite.approve(farmConfig.v2RouterAddress, MaxUint256);
+      await tx.wait();
+      setStatus(`${farmConfig.lpSymbol} router approval confirmed.`);
+      await refreshData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "LP router approval failed.";
+      setStatus(message);
+    } finally {
+      setBusy(false);
+    }
+  }, [lpWrite, refreshData]);
+
   const addLiquidity = useCallback(async () => {
     if (!v2RouterWrite) {
       setStatus("Connect wallet first.");
@@ -443,6 +479,70 @@ export function useFarm(): FarmState {
       setBusy(false);
     }
   }, [account, liquidityQuoteInput, liquidityTokenInput, refreshData, v2RouterWrite]);
+
+  const removeLiquidity = useCallback(async () => {
+    if (!v2RouterWrite) {
+      setStatus("Connect wallet first.");
+      return;
+    }
+
+    try {
+      const liquidity = parseInputToUnits(removeLiquidityInput, farmConfig.lpDecimals);
+
+      if (liquidity <= 0n) {
+        setStatus("Enter a valid LP amount to remove.");
+        return;
+      }
+
+      const slippageBps = BigInt(farmConfig.liquiditySlippageBps);
+      const totalLiquidity = walletLpBalance + totalStaked;
+      let amountTokenMin = 0n;
+      let amountQuoteMin = 0n;
+
+      if (totalLiquidity > 0n && pairTokenReserve > 0n && pairQuoteReserve > 0n) {
+        const expectedTokenOut = (liquidity * pairTokenReserve) / totalLiquidity;
+        const expectedQuoteOut = (liquidity * pairQuoteReserve) / totalLiquidity;
+        amountTokenMin = (expectedTokenOut * (10000n - slippageBps)) / 10000n;
+        amountQuoteMin = (expectedQuoteOut * (10000n - slippageBps)) / 10000n;
+      }
+
+      const deadline =
+        BigInt(Math.floor(Date.now() / 1000)) +
+        BigInt(farmConfig.liquidityDeadlineMinutes * 60);
+
+      setBusy(true);
+      setStatus(`Removing ${farmConfig.lpSymbol} liquidity...`);
+
+      const tx = await v2RouterWrite.removeLiquidity(
+        farmConfig.tokenAddress,
+        farmConfig.quoteTokenAddress,
+        liquidity,
+        amountTokenMin,
+        amountQuoteMin,
+        account,
+        deadline,
+      );
+
+      await tx.wait();
+      setStatus(`Liquidity removed. ${farmConfig.tokenSymbol} and ${farmConfig.quoteTokenSymbol} returned to your wallet.`);
+      setRemoveLiquidityInput("");
+      await refreshData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Remove liquidity failed.";
+      setStatus(message);
+    } finally {
+      setBusy(false);
+    }
+  }, [
+    account,
+    pairQuoteReserve,
+    pairTokenReserve,
+    refreshData,
+    removeLiquidityInput,
+    totalStaked,
+    v2RouterWrite,
+    walletLpBalance,
+  ]);
 
   const stakeLp = useCallback(async () => {
     if (!rewardsWrite) {
@@ -564,6 +664,10 @@ export function useFarm(): FarmState {
     setLiquidityTokenInput(tokenFromQuoteInput(nextValue));
   }, [tokenFromQuoteInput, walletQuoteTokenBalance]);
 
+  const fillMaxRemoveLiquidity = useCallback(() => {
+    setRemoveLiquidityInput(formatUnitsSafe(walletLpBalance, farmConfig.lpDecimals, 8));
+  }, [walletLpBalance]);
+
   useEffect(() => {
     if (!account) {
       return;
@@ -655,10 +759,16 @@ export function useFarm(): FarmState {
     liquidityQuoteInput || "0",
     farmConfig.quoteTokenDecimals,
   );
+  const requiredRemoveLiquidityApproval = parseInputToUnitsSafe(
+    removeLiquidityInput || "0",
+    farmConfig.lpDecimals,
+  );
   const hasLiquidityTokenApproval =
     requiredTokenApproval === 0n || tokenAllowanceToRouter >= requiredTokenApproval;
   const hasLiquidityQuoteApproval =
     requiredQuoteApproval === 0n || quoteTokenAllowanceToRouter >= requiredQuoteApproval;
+  const hasRemoveLiquidityApproval =
+    requiredRemoveLiquidityApproval === 0n || lpAllowanceToRouter >= requiredRemoveLiquidityApproval;
 
   return {
     provider,
@@ -676,24 +786,30 @@ export function useFarm(): FarmState {
     allowance,
     tokenAllowanceToRouter,
     quoteTokenAllowanceToRouter,
+    lpAllowanceToRouter,
     totalStaked,
     pairTokenReserve,
     pairQuoteReserve,
     liquidityTokenInput,
     liquidityQuoteInput,
+    removeLiquidityInput,
     stakeInput,
     withdrawInput,
     hasApproval,
     hasLiquidityTokenApproval,
     hasLiquidityQuoteApproval,
+    hasRemoveLiquidityApproval,
     setLiquidityTokenInput: handleLiquidityTokenInput,
     setLiquidityQuoteInput: handleLiquidityQuoteInput,
+    setRemoveLiquidityInput,
     setStakeInput,
     setWithdrawInput,
     refreshData,
     approveTokenForRouter,
     approveQuoteTokenForRouter,
+    approveLpForRouter,
     addLiquidity,
+    removeLiquidity,
     approveLp,
     stakeLp,
     withdrawLp,
@@ -701,6 +817,7 @@ export function useFarm(): FarmState {
     exitFarm,
     fillMaxLiquidityToken,
     fillMaxLiquidityQuote,
+    fillMaxRemoveLiquidity,
     fillMaxStake,
     fillMaxWithdraw,
   };

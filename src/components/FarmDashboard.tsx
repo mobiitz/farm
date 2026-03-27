@@ -71,20 +71,27 @@ export function FarmDashboard() {
             farm.walletQuoteTokenBalance,
             farmConfig.quoteTokenDecimals,
           )}
+          lpBalance={formatUnitsSafe(farm.walletLpBalance, farmConfig.lpDecimals)}
           tokenValue={farm.liquidityTokenInput}
           quoteValue={farm.liquidityQuoteInput}
+          removeLiquidityValue={farm.removeLiquidityInput}
           hasTokenApproval={farm.hasLiquidityTokenApproval}
           hasQuoteApproval={farm.hasLiquidityQuoteApproval}
+          hasRemoveLiquidityApproval={farm.hasRemoveLiquidityApproval}
           busy={farm.busy}
           connected={Boolean(farm.account)}
           poolAddress={farmConfig.v2PoolAddress}
           onTokenValueChange={farm.setLiquidityTokenInput}
           onQuoteValueChange={farm.setLiquidityQuoteInput}
+          onRemoveLiquidityValueChange={farm.setRemoveLiquidityInput}
           onTokenMax={farm.fillMaxLiquidityToken}
           onQuoteMax={farm.fillMaxLiquidityQuote}
+          onRemoveLiquidityMax={farm.fillMaxRemoveLiquidity}
           onApproveToken={farm.approveTokenForRouter}
           onApproveQuoteToken={farm.approveQuoteTokenForRouter}
+          onApproveLp={farm.approveLpForRouter}
           onAddLiquidity={farm.addLiquidity}
+          onRemoveLiquidity={farm.removeLiquidity}
         />
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
