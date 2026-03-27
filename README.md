@@ -117,8 +117,9 @@ To deploy it:
 1. Push the repo to the `main` branch on GitHub.
 2. In GitHub, go to `Settings -> Pages`.
 3. Under `Build and deployment`, set `Source` to `GitHub Actions`.
-4. In `Settings -> Secrets and variables -> Actions -> Variables`, add the `VITE_...` values from your local `.env`.
-5. Push again or run the `Deploy to GitHub Pages` workflow manually from the `Actions` tab.
+4. In `Settings -> Secrets and variables -> Actions -> Variables`, create one repository variable named `env`.
+5. Paste your full Vite env block into that `env` variable exactly as key/value lines.
+6. Push again or run the `Deploy to GitHub Pages` workflow manually from the `Actions` tab.
 
 ## Environment Variables
 
