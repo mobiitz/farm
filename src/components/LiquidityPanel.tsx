@@ -50,8 +50,9 @@ export function LiquidityPanel({
         <CardHeader>
           <CardTitle className="text-lg sm:text-xl">Add {tokenSymbol}/{quoteTokenSymbol} Liquidity</CardTitle>
           <p className="text-sm text-slate-300">
-            Supply both tokens directly through the configured V2 router, receive LP tokens,
-            then stake them below.
+            Here you can add to the liquidity pool, in order to get LP Stake tokens for
+            earning {tokenSymbol} rewards with. After this step, continue to the Stake LP
+            step. You&apos;re almost there!
           </p>
           <p className="break-all text-xs text-slate-400">Pool: {poolAddress}</p>
         </CardHeader>
