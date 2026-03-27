@@ -61,12 +61,17 @@ export function StakePanel({
               onClick={onSecondaryAction}
               disabled={secondaryDisabled}
               variant={secondaryVariant}
-              className="w-full"
+              className="h-auto min-h-11 w-full whitespace-normal py-3 text-center"
             >
               {secondaryActionLabel}
             </Button>
           ) : null}
-          <Button onClick={onPrimaryAction} disabled={primaryDisabled} variant={primaryVariant} className="w-full">
+          <Button
+            onClick={onPrimaryAction}
+            disabled={primaryDisabled}
+            variant={primaryVariant}
+            className="h-auto min-h-11 w-full whitespace-normal py-3 text-center"
+          >
             {primaryActionLabel}
           </Button>
         </div>
@@ -76,7 +81,7 @@ export function StakePanel({
             onClick={onFooterAction}
             disabled={footerDisabled}
             variant="outline"
-            className="w-full"
+            className="h-auto min-h-11 w-full whitespace-normal py-3 text-center"
           >
             {footerActionLabel}
           </Button>

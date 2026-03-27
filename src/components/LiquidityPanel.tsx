@@ -88,7 +88,7 @@ export function LiquidityPanel({
               onClick={onApproveToken}
               disabled={busy || !connected || hasTokenApproval}
               variant={hasTokenApproval ? "secondary" : "default"}
-              className="w-full"
+              className="h-auto min-h-11 w-full whitespace-normal py-3 text-center"
             >
               {hasTokenApproval ? (
                 <>
@@ -104,7 +104,7 @@ export function LiquidityPanel({
               onClick={onApproveQuoteToken}
               disabled={busy || !connected || hasQuoteApproval}
               variant={hasQuoteApproval ? "secondary" : "default"}
-              className="w-full"
+              className="h-auto min-h-11 w-full whitespace-normal py-3 text-center"
             >
               {hasQuoteApproval ? (
                 <>
@@ -119,7 +119,7 @@ export function LiquidityPanel({
             <Button
               onClick={onAddLiquidity}
               disabled={busy || !connected || !hasTokenApproval || !hasQuoteApproval}
-              className="w-full sm:col-span-2 lg:col-span-1"
+              className="h-auto min-h-11 w-full whitespace-normal py-3 text-center sm:col-span-2 lg:col-span-1"
             >
               <strong>Step 3.</strong>&nbsp;Add Liquidity
             </Button>
