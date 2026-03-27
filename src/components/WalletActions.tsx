@@ -1,17 +1,16 @@
 import { motion } from "framer-motion";
-import { Droplets, RefreshCw, Wallet } from "lucide-react";
+import { Droplets, RefreshCw } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WalletConnectTrigger } from "@/components/WalletConnectTrigger";
 
 type WalletActionsProps = {
   chainName: string;
   title: string;
   description: string;
-  accountLabel: string;
   busy: boolean;
   connected: boolean;
-  onConnect: () => Promise<void>;
   onRefresh: () => Promise<void>;
 };
 
@@ -19,10 +18,8 @@ export function WalletActions({
   chainName,
   title,
   description,
-  accountLabel,
   busy,
   connected,
-  onConnect,
   onRefresh,
 }: WalletActionsProps) {
   return (
@@ -37,10 +34,7 @@ export function WalletActions({
           <p className="max-w-2xl text-slate-300">{description}</p>
         </CardHeader>
         <CardContent className="grid gap-3 sm:flex sm:flex-wrap">
-          <Button onClick={onConnect} disabled={busy} className="w-full sm:w-auto">
-            <Wallet className="mr-2 h-4 w-4" />
-            {accountLabel}
-          </Button>
+          <WalletConnectTrigger />
           <a
             href="#add-liquidity"
             className={buttonVariants("secondary", "w-full sm:w-auto")}

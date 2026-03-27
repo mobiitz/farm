@@ -23,6 +23,10 @@ export const farmConfig = {
   chainName: getEnv("VITE_CHAIN_NAME", "Ethereum"),
   projectName: getEnv("VITE_PROJECT_NAME", "Maga Bitcoin"),
   projectTicker: getEnv("VITE_PROJECT_TICKER", "MBTC"),
+  walletConnectProjectId: getEnv(
+    "VITE_WALLETCONNECT_PROJECT_ID",
+    "YOUR_WALLETCONNECT_PROJECT_ID",
+  ),
   tokenSymbol: getEnv("VITE_TOKEN_SYMBOL", "MBTC"),
   tokenAddress: getEnv(
     "VITE_TOKEN_ADDRESS",

@@ -12,7 +12,6 @@ import {
   formatDateTime,
   formatPerDay,
   formatUnitsSafe,
-  shortAddress,
 } from "@/lib/format";
 
 export function FarmDashboard() {
@@ -27,10 +26,8 @@ export function FarmDashboard() {
             chainName={farmConfig.chainName}
             title={`${farmConfig.projectName} Farm`}
             description={`Add liquidity, stake your ${farmConfig.lpSymbol}, and earn ${farmConfig.tokenSymbol} rewards over time.`}
-            accountLabel={farm.account ? shortAddress(farm.account) : "Connect Wallet"}
             busy={farm.busy}
             connected={Boolean(farm.account)}
-            onConnect={farm.connectWallet}
             onRefresh={farm.refreshData}
           />
           <ProgramInfoCard

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BrowserProvider, JsonRpcSigner, MaxUint256, type Eip1193Provider } from "ethers";
+import { useAccount } from "wagmi";
 import { farmConfig } from "@/lib/config";
 import {
   getLpReadContract,
@@ -12,15 +13,6 @@ import {
   getRewardsWriteContract,
 } from "@/lib/contracts";
 import { formatUnitsSafe, parseInputToUnits, parseInputToUnitsSafe } from "@/lib/format";
-
-declare global {
-  interface Window {
-    ethereum?: Eip1193Provider & {
-      on?: (event: string, handler: (...args: unknown[]) => void) => void;
-      removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
-    };
-  }
-}
 
 export type FarmState = {
   provider: BrowserProvider | null;
@@ -52,7 +44,6 @@ export type FarmState = {
   setLiquidityQuoteInput: (value: string) => void;
   setStakeInput: (value: string) => void;
   setWithdrawInput: (value: string) => void;
-  connectWallet: () => Promise<void>;
   refreshData: () => Promise<void>;
   approveTokenForRouter: () => Promise<void>;
   approveQuoteTokenForRouter: () => Promise<void>;
@@ -69,6 +60,7 @@ export type FarmState = {
 };
 
 export function useFarm(): FarmState {
+  const { address, connector, chain, isConnected } = useAccount();
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [account, setAccount] = useState("");
@@ -270,36 +262,6 @@ export function useFarm(): FarmState {
     setLiquidityQuoteInput(value);
     setLiquidityTokenInput(tokenFromQuoteInput(value));
   }, [tokenFromQuoteInput]);
-
-  const connectWallet = useCallback(async () => {
-    try {
-      if (!window.ethereum) {
-        setStatus(
-          "No injected wallet found. Install MetaMask or another compatible wallet.",
-        );
-        return;
-      }
-
-      const browserProvider = new BrowserProvider(window.ethereum);
-      const network = await browserProvider.getNetwork();
-
-      if (Number(network.chainId) !== farmConfig.chainId) {
-        setStatus(`Wrong network. Please switch to ${farmConfig.chainName}.`);
-      }
-
-      await browserProvider.send("eth_requestAccounts", []);
-      const nextSigner = await browserProvider.getSigner();
-      const address = await nextSigner.getAddress();
-
-      setProvider(browserProvider);
-      setSigner(nextSigner);
-      setAccount(address);
-      setStatus("Wallet connected.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to connect wallet.";
-      setStatus(message);
-    }
-  }, []);
 
   const approveLp = useCallback(async () => {
     if (!lpWrite) {
@@ -571,36 +533,62 @@ export function useFarm(): FarmState {
   }, [account, quoteFromTokenInput, walletTokenBalance]);
 
   useEffect(() => {
-    const eth = window.ethereum;
-
-    if (!eth) {
+    if (!isConnected || !connector || !address) {
+      setAccount("");
+      setSigner(null);
+      setProvider(null);
+      setStatus("Connect your wallet to begin.");
       return;
     }
 
-    const handleAccountsChanged = async (accounts: unknown) => {
-      if (!Array.isArray(accounts) || !accounts.length) {
-        setAccount("");
-        setSigner(null);
-        setProvider(null);
-        setStatus("Wallet disconnected.");
-        return;
+    let cancelled = false;
+    const activeConnector = connector;
+    const activeAddress = address;
+
+    async function syncWallet() {
+      try {
+        const walletProvider = (await activeConnector.getProvider()) as
+          | Eip1193Provider
+          | undefined;
+
+        if (!walletProvider) {
+          if (!cancelled) {
+            setStatus("Wallet provider unavailable.");
+          }
+          return;
+        }
+
+        const browserProvider = new BrowserProvider(walletProvider);
+        const nextSigner = await browserProvider.getSigner(activeAddress);
+
+        if (cancelled) {
+          return;
+        }
+
+        setProvider(browserProvider);
+        setSigner(nextSigner);
+        setAccount(activeAddress);
+
+        if ((chain?.id ?? farmConfig.chainId) !== farmConfig.chainId) {
+          setStatus(`Wrong network. Please switch to ${farmConfig.chainName}.`);
+        } else {
+          setStatus("Wallet connected.");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message =
+            error instanceof Error ? error.message : "Failed to initialize wallet.";
+          setStatus(message);
+        }
       }
+    }
 
-      await connectWallet();
-    };
-
-    const handleChainChanged = () => {
-      window.location.reload();
-    };
-
-    eth.on?.("accountsChanged", handleAccountsChanged);
-    eth.on?.("chainChanged", handleChainChanged);
+    void syncWallet();
 
     return () => {
-      eth.removeListener?.("accountsChanged", handleAccountsChanged);
-      eth.removeListener?.("chainChanged", handleChainChanged);
+      cancelled = true;
     };
-  }, [connectWallet]);
+  }, [address, chain?.id, connector, isConnected]);
 
   const hasApproval = allowance > 0n;
   const requiredTokenApproval = parseInputToUnitsSafe(
@@ -646,7 +634,6 @@ export function useFarm(): FarmState {
     setLiquidityQuoteInput: handleLiquidityQuoteInput,
     setStakeInput,
     setWithdrawInput,
-    connectWallet,
     refreshData,
     approveTokenForRouter,
     approveQuoteTokenForRouter,
