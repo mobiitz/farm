@@ -133,21 +133,21 @@ export function useFarm(): FarmState {
 
     try {
       const [
-        nextWalletLpBalance,
-        nextWalletTokenBalance,
-        nextWalletQuoteTokenBalance,
-        nextStakedBalance,
-        nextEarned,
-        nextRewardRate,
-        nextPeriodFinish,
-        nextAllowance,
-        nextTokenAllowanceToRouter,
-        nextQuoteTokenAllowanceToRouter,
-        nextTotalStaked,
-        pairToken0,
-        pairToken1,
-        pairReserves,
-      ] = await Promise.all([
+        walletLpBalanceResult,
+        walletTokenBalanceResult,
+        walletQuoteTokenBalanceResult,
+        stakedBalanceResult,
+        earnedResult,
+        rewardRateResult,
+        periodFinishResult,
+        allowanceResult,
+        tokenAllowanceToRouterResult,
+        quoteTokenAllowanceToRouterResult,
+        totalStakedResult,
+        pairToken0Result,
+        pairToken1Result,
+        pairReservesResult,
+      ] = await Promise.allSettled([
         lpRead.balanceOf(account),
         tokenRead.balanceOf(account),
         quoteTokenRead.balanceOf(account),
@@ -164,34 +164,75 @@ export function useFarm(): FarmState {
         pairRead.getReserves(),
       ]);
 
-      setWalletLpBalance(nextWalletLpBalance as bigint);
-      setWalletTokenBalance(nextWalletTokenBalance as bigint);
-      setWalletQuoteTokenBalance(nextWalletQuoteTokenBalance as bigint);
-      setStakedBalance(nextStakedBalance as bigint);
-      setEarnedRewards(nextEarned as bigint);
-      setRewardRate(nextRewardRate as bigint);
-      setPeriodFinish(nextPeriodFinish as bigint);
-      setAllowance(nextAllowance as bigint);
-      setTokenAllowanceToRouter(nextTokenAllowanceToRouter as bigint);
-      setQuoteTokenAllowanceToRouter(nextQuoteTokenAllowanceToRouter as bigint);
-      setTotalStaked(nextTotalStaked as bigint);
+      if (walletLpBalanceResult.status === "fulfilled") {
+        setWalletLpBalance(walletLpBalanceResult.value as bigint);
+      }
 
-      const token0Address = String(pairToken0).toLowerCase();
-      const token1Address = String(pairToken1).toLowerCase();
-      const tokenAddress = farmConfig.tokenAddress.toLowerCase();
-      const quoteTokenAddress = farmConfig.quoteTokenAddress.toLowerCase();
-      const reserves = pairReserves as [bigint, bigint, number];
+      if (walletTokenBalanceResult.status === "fulfilled") {
+        setWalletTokenBalance(walletTokenBalanceResult.value as bigint);
+      }
 
-      if (token0Address === tokenAddress && token1Address === quoteTokenAddress) {
-        setPairTokenReserve(reserves[0]);
-        setPairQuoteReserve(reserves[1]);
-      } else if (token0Address === quoteTokenAddress && token1Address === tokenAddress) {
-        setPairTokenReserve(reserves[1]);
-        setPairQuoteReserve(reserves[0]);
+      if (walletQuoteTokenBalanceResult.status === "fulfilled") {
+        setWalletQuoteTokenBalance(walletQuoteTokenBalanceResult.value as bigint);
+      }
+
+      if (stakedBalanceResult.status === "fulfilled") {
+        setStakedBalance(stakedBalanceResult.value as bigint);
+      }
+
+      if (earnedResult.status === "fulfilled") {
+        setEarnedRewards(earnedResult.value as bigint);
+      }
+
+      if (rewardRateResult.status === "fulfilled") {
+        setRewardRate(rewardRateResult.value as bigint);
+      }
+
+      if (periodFinishResult.status === "fulfilled") {
+        setPeriodFinish(periodFinishResult.value as bigint);
+      }
+
+      if (allowanceResult.status === "fulfilled") {
+        setAllowance(allowanceResult.value as bigint);
+      }
+
+      if (tokenAllowanceToRouterResult.status === "fulfilled") {
+        setTokenAllowanceToRouter(tokenAllowanceToRouterResult.value as bigint);
+      }
+
+      if (quoteTokenAllowanceToRouterResult.status === "fulfilled") {
+        setQuoteTokenAllowanceToRouter(quoteTokenAllowanceToRouterResult.value as bigint);
+      }
+
+      if (totalStakedResult.status === "fulfilled") {
+        setTotalStaked(totalStakedResult.value as bigint);
+      }
+
+      if (
+        pairToken0Result.status === "fulfilled" &&
+        pairToken1Result.status === "fulfilled" &&
+        pairReservesResult.status === "fulfilled"
+      ) {
+        const token0Address = String(pairToken0Result.value).toLowerCase();
+        const token1Address = String(pairToken1Result.value).toLowerCase();
+        const tokenAddress = farmConfig.tokenAddress.toLowerCase();
+        const quoteTokenAddress = farmConfig.quoteTokenAddress.toLowerCase();
+        const reserves = pairReservesResult.value as [bigint, bigint, number];
+
+        if (token0Address === tokenAddress && token1Address === quoteTokenAddress) {
+          setPairTokenReserve(reserves[0]);
+          setPairQuoteReserve(reserves[1]);
+        } else if (token0Address === quoteTokenAddress && token1Address === tokenAddress) {
+          setPairTokenReserve(reserves[1]);
+          setPairQuoteReserve(reserves[0]);
+        } else {
+          setPairTokenReserve(0n);
+          setPairQuoteReserve(0n);
+          setStatus("Configured pair does not match the MBTC/USDC token addresses.");
+        }
       } else {
         setPairTokenReserve(0n);
         setPairQuoteReserve(0n);
-        setStatus("Configured pair does not match the MBTC/USDC token addresses.");
       }
     } catch (error) {
       const message =
