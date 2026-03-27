@@ -51,8 +51,8 @@ export function LiquidityPanel({
           <CardTitle className="text-lg sm:text-xl">Add {tokenSymbol}/{quoteTokenSymbol} Liquidity</CardTitle>
           <p className="text-sm text-slate-300">
             Here you can add to the liquidity pool, in order to get LP Stake tokens for
-            earning {tokenSymbol} rewards with. After this step, continue to the Stake LP
-            step. You&apos;re almost there!
+            earning {tokenSymbol} rewards with. After these 3 steps are complete,
+            continue to the &quot;Stake LP&quot; section below, you&apos;re almost there!
           </p>
           <p className="break-all text-xs text-slate-400">Pool: {poolAddress}</p>
         </CardHeader>
@@ -90,7 +90,15 @@ export function LiquidityPanel({
               variant={hasTokenApproval ? "secondary" : "default"}
               className="w-full"
             >
-              {hasTokenApproval ? `${tokenSymbol} Approved` : `Approve ${tokenSymbol}`}
+              {hasTokenApproval ? (
+                <>
+                  <strong>Step 1.</strong>&nbsp;{tokenSymbol} Approved
+                </>
+              ) : (
+                <>
+                  <strong>Step 1.</strong>&nbsp;Approve {tokenSymbol}
+                </>
+              )}
             </Button>
             <Button
               onClick={onApproveQuoteToken}
@@ -98,14 +106,22 @@ export function LiquidityPanel({
               variant={hasQuoteApproval ? "secondary" : "default"}
               className="w-full"
             >
-              {hasQuoteApproval ? `${quoteTokenSymbol} Approved` : `Approve ${quoteTokenSymbol}`}
+              {hasQuoteApproval ? (
+                <>
+                  <strong>Step 2.</strong>&nbsp;{quoteTokenSymbol} Approved
+                </>
+              ) : (
+                <>
+                  <strong>Step 2.</strong>&nbsp;Approve {quoteTokenSymbol}
+                </>
+              )}
             </Button>
             <Button
               onClick={onAddLiquidity}
               disabled={busy || !connected || !hasTokenApproval || !hasQuoteApproval}
               className="w-full sm:col-span-2 lg:col-span-1"
             >
-              Add Liquidity
+              <strong>Step 3.</strong>&nbsp;Add Liquidity
             </Button>
           </div>
         </CardContent>
