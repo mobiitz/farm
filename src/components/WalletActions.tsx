@@ -34,7 +34,13 @@ export function WalletActions({
             className="h-14 w-auto rounded-lg object-contain sm:h-16"
           />
           <div className="flex flex-wrap items-center gap-2">
-            <Badge>Live Farm</Badge>
+            <Badge className="gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </span>
+              Live Farm
+            </Badge>
             <Badge variant="secondary">{chainName}</Badge>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</CardTitle>
