@@ -11,7 +11,6 @@ import { useFarm } from "@/hooks/useFarm";
 import { farmConfig } from "@/lib/config";
 import {
   formatDateTime,
-  formatPerDay,
   formatUnitsSafe,
 } from "@/lib/format";
 
@@ -32,7 +31,6 @@ export function FarmDashboard() {
             onRefresh={farm.refreshData}
           />
           <ProgramInfoCard
-            rewardRate={`${formatPerDay(farm.rewardRate, farmConfig.tokenDecimals)} ${farmConfig.tokenSymbol}/day`}
             totalStaked={`${formatUnitsSafe(farm.totalStaked, farmConfig.lpDecimals)} ${farmConfig.lpSymbol}`}
             programEnds={formatDateTime(farm.periodFinish)}
           />
