@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BrowserProvider, JsonRpcSigner, MaxUint256, type Eip1193Provider } from "ethers";
-import { useAccount, useBalance } from "wagmi";
+import {
+  BrowserProvider,
+  JsonRpcSigner,
+  MaxUint256,
+  isAddress,
+  type Eip1193Provider,
+} from "ethers";
+import { useAccount, useBalance, useReadContracts } from "wagmi";
 import { farmConfig } from "@/lib/config";
+import { REWARDS_ABI } from "@/lib/abis";
 import {
   getLpReadContract,
   getTokenReadContract,
@@ -68,6 +75,35 @@ export type FarmState = {
 
 export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
+  const rewardsContractReady = isAddress(farmConfig.rewardsContractAddress);
+  const {
+    data: publicProgramInfoData,
+  } = useReadContracts({
+    contracts: rewardsContractReady
+      ? [
+          {
+            address: farmConfig.rewardsContractAddress as `0x${string}`,
+            abi: REWARDS_ABI,
+            functionName: "rewardRate",
+          },
+          {
+            address: farmConfig.rewardsContractAddress as `0x${string}`,
+            abi: REWARDS_ABI,
+            functionName: "periodFinish",
+          },
+          {
+            address: farmConfig.rewardsContractAddress as `0x${string}`,
+            abi: REWARDS_ABI,
+            functionName: "totalSupply",
+          },
+        ]
+      : [],
+    allowFailure: true,
+    query: {
+      enabled: rewardsContractReady,
+      refetchInterval: 10000,
+    },
+  });
   const { data: walletTokenBalanceData } = useBalance({
     address,
     token: farmConfig.tokenAddress as `0x${string}`,
@@ -285,6 +321,32 @@ export function useFarm(): FarmState {
     walletQuoteTokenBalanceData,
     walletTokenBalanceData,
   ]);
+
+  useEffect(() => {
+    if (!publicProgramInfoData?.length) {
+      return;
+    }
+
+    const [rewardRateResult, periodFinishResult, totalStakedResult] = publicProgramInfoData;
+
+    if (rewardRateResult?.status === "success" && typeof rewardRateResult.result === "bigint") {
+      setRewardRate(rewardRateResult.result);
+    }
+
+    if (
+      periodFinishResult?.status === "success" &&
+      typeof periodFinishResult.result === "bigint"
+    ) {
+      setPeriodFinish(periodFinishResult.result);
+    }
+
+    if (
+      totalStakedResult?.status === "success" &&
+      typeof totalStakedResult.result === "bigint"
+    ) {
+      setTotalStaked(totalStakedResult.result);
+    }
+  }, [publicProgramInfoData]);
 
   useEffect(() => {
     if (walletTokenBalanceData?.value != null) {
