@@ -39,6 +39,7 @@ export type FarmState = {
   quoteTokenAllowanceToRouter: bigint;
   lpAllowanceToRouter: bigint;
   totalStaked: bigint;
+  pairTotalSupply: bigint;
   pairTokenReserve: bigint;
   pairQuoteReserve: bigint;
   liquidityTokenInput: string;
@@ -146,6 +147,7 @@ export function useFarm(): FarmState {
   const [quoteTokenAllowanceToRouter, setQuoteTokenAllowanceToRouter] = useState(0n);
   const [lpAllowanceToRouter, setLpAllowanceToRouter] = useState(0n);
   const [totalStaked, setTotalStaked] = useState(0n);
+  const [pairTotalSupply, setPairTotalSupply] = useState(0n);
   const [pairTokenReserve, setPairTokenReserve] = useState(0n);
   const [pairQuoteReserve, setPairQuoteReserve] = useState(0n);
 
@@ -206,6 +208,7 @@ export function useFarm(): FarmState {
         quoteTokenAllowanceToRouterResult,
         lpAllowanceToRouterResult,
         totalStakedResult,
+        pairTotalSupplyResult,
         pairToken0Result,
         pairToken1Result,
         pairReservesResult,
@@ -222,6 +225,7 @@ export function useFarm(): FarmState {
         quoteTokenRead.allowance(account, farmConfig.v2RouterAddress),
         lpRead.allowance(account, farmConfig.v2RouterAddress),
         rewardsRead.totalSupply(),
+        pairRead.totalSupply(),
         pairRead.token0(),
         pairRead.token1(),
         pairRead.getReserves(),
@@ -276,6 +280,10 @@ export function useFarm(): FarmState {
 
       if (totalStakedResult.status === "fulfilled") {
         setTotalStaked(totalStakedResult.value as bigint);
+      }
+
+      if (pairTotalSupplyResult.status === "fulfilled") {
+        setPairTotalSupply(pairTotalSupplyResult.value as bigint);
       }
 
       if (
@@ -557,13 +565,12 @@ export function useFarm(): FarmState {
       }
 
       const slippageBps = BigInt(farmConfig.liquiditySlippageBps);
-      const totalLiquidity = walletLpBalance + totalStaked;
       let amountTokenMin = 0n;
       let amountQuoteMin = 0n;
 
-      if (totalLiquidity > 0n && pairTokenReserve > 0n && pairQuoteReserve > 0n) {
-        const expectedTokenOut = (liquidity * pairTokenReserve) / totalLiquidity;
-        const expectedQuoteOut = (liquidity * pairQuoteReserve) / totalLiquidity;
+      if (pairTotalSupply > 0n && pairTokenReserve > 0n && pairQuoteReserve > 0n) {
+        const expectedTokenOut = (liquidity * pairTokenReserve) / pairTotalSupply;
+        const expectedQuoteOut = (liquidity * pairQuoteReserve) / pairTotalSupply;
         amountTokenMin = (expectedTokenOut * (10000n - slippageBps)) / 10000n;
         amountQuoteMin = (expectedQuoteOut * (10000n - slippageBps)) / 10000n;
       }
@@ -597,13 +604,12 @@ export function useFarm(): FarmState {
     }
   }, [
     account,
+    pairTotalSupply,
     pairQuoteReserve,
     pairTokenReserve,
     refreshData,
     removeLiquidityInput,
-    totalStaked,
     v2RouterWrite,
-    walletLpBalance,
   ]);
 
   const stakeLp = useCallback(async () => {
@@ -830,7 +836,9 @@ export function useFarm(): FarmState {
   const hasLiquidityQuoteApproval =
     requiredQuoteApproval === 0n || quoteTokenAllowanceToRouter >= requiredQuoteApproval;
   const hasRemoveLiquidityApproval =
-    requiredRemoveLiquidityApproval === 0n || lpAllowanceToRouter >= requiredRemoveLiquidityApproval;
+    lpAllowanceToRouter > 0n &&
+    (requiredRemoveLiquidityApproval === 0n ||
+      lpAllowanceToRouter >= requiredRemoveLiquidityApproval);
 
   return {
     provider,
@@ -850,6 +858,7 @@ export function useFarm(): FarmState {
     quoteTokenAllowanceToRouter,
     lpAllowanceToRouter,
     totalStaked,
+    pairTotalSupply,
     pairTokenReserve,
     pairQuoteReserve,
     liquidityTokenInput,
