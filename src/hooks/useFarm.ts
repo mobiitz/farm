@@ -13,7 +13,6 @@ import {
   getLpReadContract,
   getTokenReadContract,
   getTokenWriteContract,
-  getV2PairReadContract,
   getV2RouterWriteContract,
   getLpWriteContract,
   getRewardsReadContract,
@@ -77,6 +76,7 @@ export type FarmState = {
 export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
   const rewardsContractReady = isAddress(farmConfig.rewardsContractAddress);
+  const pairContractReady = isAddress(farmConfig.v2PoolAddress);
   const {
     data: publicProgramInfoData,
   } = useReadContracts({
@@ -105,6 +105,63 @@ export function useFarm(): FarmState {
     allowFailure: true,
     query: {
       enabled: rewardsContractReady,
+      refetchInterval: 10000,
+    },
+  });
+  const {
+    data: publicPairData,
+  } = useReadContracts({
+    contracts: pairContractReady
+      ? [
+          {
+            address: farmConfig.v2PoolAddress as `0x${string}`,
+            abi: [
+              "function totalSupply() view returns (uint256)",
+              "function token0() view returns (address)",
+              "function token1() view returns (address)",
+              "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+            ] as const,
+            chainId: farmConfig.chainId,
+            functionName: "totalSupply",
+          },
+          {
+            address: farmConfig.v2PoolAddress as `0x${string}`,
+            abi: [
+              "function totalSupply() view returns (uint256)",
+              "function token0() view returns (address)",
+              "function token1() view returns (address)",
+              "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+            ] as const,
+            chainId: farmConfig.chainId,
+            functionName: "token0",
+          },
+          {
+            address: farmConfig.v2PoolAddress as `0x${string}`,
+            abi: [
+              "function totalSupply() view returns (uint256)",
+              "function token0() view returns (address)",
+              "function token1() view returns (address)",
+              "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+            ] as const,
+            chainId: farmConfig.chainId,
+            functionName: "token1",
+          },
+          {
+            address: farmConfig.v2PoolAddress as `0x${string}`,
+            abi: [
+              "function totalSupply() view returns (uint256)",
+              "function token0() view returns (address)",
+              "function token1() view returns (address)",
+              "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+            ] as const,
+            chainId: farmConfig.chainId,
+            functionName: "getReserves",
+          },
+        ]
+      : [],
+    allowFailure: true,
+    query: {
+      enabled: pairContractReady,
       refetchInterval: 10000,
     },
   });
@@ -176,7 +233,6 @@ export function useFarm(): FarmState {
     () => (provider ? getTokenReadContract(farmConfig.quoteTokenAddress, provider) : null),
     [provider],
   );
-  const pairRead = useMemo(() => (provider ? getV2PairReadContract(provider) : null), [provider]);
   const rewardsWrite = useMemo(
     () => (signer ? getRewardsWriteContract(signer) : null),
     [signer],
@@ -196,7 +252,7 @@ export function useFarm(): FarmState {
   );
 
   const refreshData = useCallback(async () => {
-    if (!provider || !rewardsRead || !lpRead || !tokenRead || !quoteTokenRead || !pairRead || !account) {
+    if (!provider || !rewardsRead || !lpRead || !tokenRead || !quoteTokenRead || !account) {
       return;
     }
 
@@ -214,10 +270,6 @@ export function useFarm(): FarmState {
         quoteTokenAllowanceToRouterResult,
         lpAllowanceToRouterResult,
         totalStakedResult,
-        pairTotalSupplyResult,
-        pairToken0Result,
-        pairToken1Result,
-        pairReservesResult,
       ] = await Promise.allSettled([
         lpRead.balanceOf(account),
         tokenRead.balanceOf(account),
@@ -231,10 +283,6 @@ export function useFarm(): FarmState {
         quoteTokenRead.allowance(account, farmConfig.v2RouterAddress),
         lpRead.allowance(account, farmConfig.v2RouterAddress),
         rewardsRead.totalSupply(),
-        pairRead.totalSupply(),
-        pairRead.token0(),
-        pairRead.token1(),
-        pairRead.getReserves(),
       ]);
 
       if (walletLpBalanceResult.status === "fulfilled" && !walletLpBalanceData) {
@@ -287,37 +335,6 @@ export function useFarm(): FarmState {
       if (totalStakedResult.status === "fulfilled") {
         setTotalStaked(totalStakedResult.value as bigint);
       }
-
-      if (pairTotalSupplyResult.status === "fulfilled") {
-        setPairTotalSupply(pairTotalSupplyResult.value as bigint);
-      }
-
-      if (
-        pairToken0Result.status === "fulfilled" &&
-        pairToken1Result.status === "fulfilled" &&
-        pairReservesResult.status === "fulfilled"
-      ) {
-        const token0Address = String(pairToken0Result.value).toLowerCase();
-        const token1Address = String(pairToken1Result.value).toLowerCase();
-        const tokenAddress = farmConfig.tokenAddress.toLowerCase();
-        const quoteTokenAddress = farmConfig.quoteTokenAddress.toLowerCase();
-        const reserves = pairReservesResult.value as [bigint, bigint, number];
-
-        if (token0Address === tokenAddress && token1Address === quoteTokenAddress) {
-          setPairTokenReserve(reserves[0]);
-          setPairQuoteReserve(reserves[1]);
-        } else if (token0Address === quoteTokenAddress && token1Address === tokenAddress) {
-          setPairTokenReserve(reserves[1]);
-          setPairQuoteReserve(reserves[0]);
-        } else {
-          setPairTokenReserve(0n);
-          setPairQuoteReserve(0n);
-          setStatus("Configured pair does not match the MBTC/USDC token addresses.");
-        }
-      } else {
-        setPairTokenReserve(0n);
-        setPairQuoteReserve(0n);
-      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to refresh contract data.";
@@ -326,7 +343,6 @@ export function useFarm(): FarmState {
   }, [
     account,
     lpRead,
-    pairRead,
     provider,
     quoteTokenRead,
     rewardsRead,
@@ -361,6 +377,50 @@ export function useFarm(): FarmState {
       setTotalStaked(totalStakedResult.result);
     }
   }, [publicProgramInfoData]);
+
+  useEffect(() => {
+    if (!publicPairData?.length) {
+      return;
+    }
+
+    const [pairTotalSupplyResult, pairToken0Result, pairToken1Result, pairReservesResult] =
+      publicPairData;
+
+    if (
+      pairTotalSupplyResult?.status === "success" &&
+      typeof pairTotalSupplyResult.result === "bigint"
+    ) {
+      setPairTotalSupply(pairTotalSupplyResult.result);
+    }
+
+    if (
+      pairToken0Result?.status === "success" &&
+      pairToken1Result?.status === "success" &&
+      pairReservesResult?.status === "success"
+    ) {
+      const token0Address = String(pairToken0Result.result).toLowerCase();
+      const token1Address = String(pairToken1Result.result).toLowerCase();
+      const tokenAddress = farmConfig.tokenAddress.toLowerCase();
+      const quoteTokenAddress = farmConfig.quoteTokenAddress.toLowerCase();
+      const reserves = pairReservesResult.result as [bigint, bigint, number];
+
+      if (token0Address === tokenAddress && token1Address === quoteTokenAddress) {
+        setPairTokenReserve(reserves[0]);
+        setPairQuoteReserve(reserves[1]);
+      } else if (token0Address === quoteTokenAddress && token1Address === tokenAddress) {
+        setPairTokenReserve(reserves[1]);
+        setPairQuoteReserve(reserves[0]);
+      } else {
+        setPairTokenReserve(0n);
+        setPairQuoteReserve(0n);
+        setStatus("Configured pair does not match the MBTC/USDC token addresses.");
+      }
+      return;
+    }
+
+    setPairTokenReserve(0n);
+    setPairQuoteReserve(0n);
+  }, [publicPairData]);
 
   useEffect(() => {
     if (walletTokenBalanceData?.value != null) {

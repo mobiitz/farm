@@ -282,8 +282,9 @@ export function LandingPage() {
                         Rewards Ready
                       </span>
                     </div>
-                    <a
-                      href={baseHref}
+                    <button
+                      type="button"
+                      disabled
                       className={buttonVariants(
                         "default",
                         "w-full justify-between rounded-2xl text-base shadow-[0_14px_35px_rgba(10,78,203,0.24)]",
@@ -291,7 +292,7 @@ export function LandingPage() {
                     >
                       <span>Launching Soon</span>
                       <ChevronRight className="h-4 w-4" />
-                    </a>
+                    </button>
                   </CardContent>
                 </Card>
               </motion.div>
