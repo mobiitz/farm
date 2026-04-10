@@ -73,6 +73,8 @@ export type FarmState = {
   fillMaxWithdraw: () => void;
 };
 
+type LiquidityInputSide = "token" | "quote" | null;
+
 export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
   const rewardsContractReady = isAddress(farmConfig.rewardsContractAddress);
@@ -219,6 +221,8 @@ export function useFarm(): FarmState {
   const [removeLiquidityInput, setRemoveLiquidityInput] = useState("");
   const [stakeInput, setStakeInput] = useState("");
   const [withdrawInput, setWithdrawInput] = useState("");
+  const [lastLiquidityInputSide, setLastLiquidityInputSide] =
+    useState<LiquidityInputSide>(null);
 
   const rewardsRead = useMemo(
     () => (provider ? getRewardsReadContract(provider) : null),
@@ -461,14 +465,33 @@ export function useFarm(): FarmState {
   }, [pairQuoteReserve, pairTokenReserve]);
 
   const handleLiquidityTokenInput = useCallback((value: string) => {
+    setLastLiquidityInputSide("token");
     setLiquidityTokenInput(value);
     setLiquidityQuoteInput(quoteFromTokenInput(value));
   }, [quoteFromTokenInput]);
 
   const handleLiquidityQuoteInput = useCallback((value: string) => {
+    setLastLiquidityInputSide("quote");
     setLiquidityQuoteInput(value);
     setLiquidityTokenInput(tokenFromQuoteInput(value));
   }, [tokenFromQuoteInput]);
+
+  useEffect(() => {
+    if (lastLiquidityInputSide === "token") {
+      setLiquidityQuoteInput(quoteFromTokenInput(liquidityTokenInput));
+      return;
+    }
+
+    if (lastLiquidityInputSide === "quote") {
+      setLiquidityTokenInput(tokenFromQuoteInput(liquidityQuoteInput));
+    }
+  }, [
+    lastLiquidityInputSide,
+    liquidityQuoteInput,
+    liquidityTokenInput,
+    quoteFromTokenInput,
+    tokenFromQuoteInput,
+  ]);
 
   const approveLp = useCallback(async () => {
     if (!lpWrite) {
@@ -618,6 +641,7 @@ export function useFarm(): FarmState {
 
       await tx.wait();
       setStatus("Liquidity added. Your LP tokens are ready to stake.");
+      setLastLiquidityInputSide(null);
       setLiquidityTokenInput("");
       setLiquidityQuoteInput("");
       await refreshData();
@@ -813,12 +837,14 @@ export function useFarm(): FarmState {
 
   const fillMaxLiquidityToken = useCallback(() => {
     const nextValue = formatUnitsSafe(walletTokenBalance, farmConfig.tokenDecimals, 8);
+    setLastLiquidityInputSide("token");
     setLiquidityTokenInput(nextValue);
     setLiquidityQuoteInput(quoteFromTokenInput(nextValue));
   }, [quoteFromTokenInput, walletTokenBalance]);
 
   const fillMaxLiquidityQuote = useCallback(() => {
     const nextValue = formatUnitsSafe(walletQuoteTokenBalance, farmConfig.quoteTokenDecimals, 8);
+    setLastLiquidityInputSide("quote");
     setLiquidityQuoteInput(nextValue);
     setLiquidityTokenInput(tokenFromQuoteInput(nextValue));
   }, [tokenFromQuoteInput, walletQuoteTokenBalance]);
@@ -847,6 +873,7 @@ export function useFarm(): FarmState {
     }
 
     const nextValue = formatUnitsSafe(walletTokenBalance, farmConfig.tokenDecimals, 8);
+    setLastLiquidityInputSide("token");
     setLiquidityTokenInput(nextValue);
     setLiquidityQuoteInput(quoteFromTokenInput(nextValue));
   }, [account, quoteFromTokenInput, walletTokenBalance]);

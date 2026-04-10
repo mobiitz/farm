@@ -175,9 +175,11 @@ export function LandingPage() {
                       <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
                         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
                           <Layers3 className="h-3.5 w-3.5 text-[#9cc3ff]" />
-                          DEX
+                          Program Ends
                         </div>
-                        <div className="mt-3 text-sm font-medium text-slate-100">Uniswap V2</div>
+                        <div className="mt-3 text-sm font-medium text-slate-100">
+                          6/29/2026, 6:32:35 PM EST
+                        </div>
                       </div>
                       <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
                         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
