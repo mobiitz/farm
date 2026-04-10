@@ -85,16 +85,19 @@ export function useFarm(): FarmState {
           {
             address: farmConfig.rewardsContractAddress as `0x${string}`,
             abi: REWARDS_ABI,
+            chainId: farmConfig.chainId,
             functionName: "rewardRate",
           },
           {
             address: farmConfig.rewardsContractAddress as `0x${string}`,
             abi: REWARDS_ABI,
+            chainId: farmConfig.chainId,
             functionName: "periodFinish",
           },
           {
             address: farmConfig.rewardsContractAddress as `0x${string}`,
             abi: REWARDS_ABI,
+            chainId: farmConfig.chainId,
             functionName: "totalSupply",
           },
         ]
@@ -107,6 +110,7 @@ export function useFarm(): FarmState {
   });
   const { data: walletTokenBalanceData } = useBalance({
     address,
+    chainId: farmConfig.chainId,
     token: farmConfig.tokenAddress as `0x${string}`,
     query: {
       enabled: Boolean(address),
@@ -115,6 +119,7 @@ export function useFarm(): FarmState {
   });
   const { data: walletQuoteTokenBalanceData } = useBalance({
     address,
+    chainId: farmConfig.chainId,
     token: farmConfig.quoteTokenAddress as `0x${string}`,
     query: {
       enabled: Boolean(address),
@@ -123,6 +128,7 @@ export function useFarm(): FarmState {
   });
   const { data: walletLpBalanceData } = useBalance({
     address,
+    chainId: farmConfig.chainId,
     token: farmConfig.lpTokenAddress as `0x${string}`,
     query: {
       enabled: Boolean(address),
