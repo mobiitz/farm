@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BrowserProvider,
+  Contract,
+  JsonRpcProvider,
   JsonRpcSigner,
   MaxUint256,
   isAddress,
@@ -8,7 +10,11 @@ import {
 } from "ethers";
 import { useAccount, useBalance, useReadContracts } from "wagmi";
 import { farmConfig } from "@/lib/config";
-import { AERODROME_ROUTER_ABI, REWARDS_ABI } from "@/lib/abis";
+import {
+  AERODROME_ROUTER_ABI,
+  REWARDS_ABI,
+  UNISWAP_V2_PAIR_ABI,
+} from "@/lib/abis";
 import {
   getLpReadContract,
   getTokenReadContract,
@@ -74,6 +80,11 @@ export type FarmState = {
 };
 
 type LiquidityInputSide = "token" | "quote" | null;
+
+const PUBLIC_RPC_URLS: Record<number, string> = {
+  1: "https://ethereum-rpc.publicnode.com",
+  8453: "https://mainnet.base.org",
+};
 
 export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
@@ -306,6 +317,85 @@ export function useFarm(): FarmState {
     () => (signer ? getV2RouterWriteContract(signer) : null),
     [signer],
   );
+  const publicReadProvider = useMemo(() => {
+    const rpcUrl = PUBLIC_RPC_URLS[farmConfig.chainId];
+    return rpcUrl ? new JsonRpcProvider(rpcUrl) : null;
+  }, []);
+
+  const refreshPublicLiquidityData = useCallback(async () => {
+    if (!publicReadProvider) {
+      return;
+    }
+
+    try {
+      if (farmConfig.dexType === "aerodrome") {
+        const router = new Contract(
+          farmConfig.v2RouterAddress,
+          AERODROME_ROUTER_ABI,
+          publicReadProvider,
+        );
+        const pair = new Contract(farmConfig.v2PoolAddress, UNISWAP_V2_PAIR_ABI, publicReadProvider);
+        const factory = await router.defaultFactory();
+        const reserves = await router.getReserves(
+          farmConfig.tokenAddress,
+          farmConfig.quoteTokenAddress,
+          farmConfig.isStablePool,
+          factory,
+        );
+
+        setPairTokenReserve(reserves[0] as bigint);
+        setPairQuoteReserve(reserves[1] as bigint);
+
+        try {
+          const [token0, token1, pairReserves] = await Promise.all([
+            pair.token0(),
+            pair.token1(),
+            pair.getReserves(),
+          ]);
+          const token0Address = String(token0).toLowerCase();
+          const token1Address = String(token1).toLowerCase();
+          const tokenAddress = farmConfig.tokenAddress.toLowerCase();
+          const quoteTokenAddress = farmConfig.quoteTokenAddress.toLowerCase();
+
+          if (token0Address === tokenAddress && token1Address === quoteTokenAddress) {
+            setPairTokenReserve((pairReserves as [bigint, bigint, number])[0]);
+            setPairQuoteReserve((pairReserves as [bigint, bigint, number])[1]);
+          } else if (token0Address === quoteTokenAddress && token1Address === tokenAddress) {
+            setPairTokenReserve((pairReserves as [bigint, bigint, number])[1]);
+            setPairQuoteReserve((pairReserves as [bigint, bigint, number])[0]);
+          }
+        } catch {
+          // The router reserves above are enough to quote liquidity.
+        }
+
+        return;
+      }
+
+      const pair = new Contract(farmConfig.v2PoolAddress, UNISWAP_V2_PAIR_ABI, publicReadProvider);
+      const [totalSupply, token0, token1, reserves] = await Promise.all([
+        pair.totalSupply(),
+        pair.token0(),
+        pair.token1(),
+        pair.getReserves(),
+      ]);
+      const token0Address = String(token0).toLowerCase();
+      const token1Address = String(token1).toLowerCase();
+      const tokenAddress = farmConfig.tokenAddress.toLowerCase();
+      const quoteTokenAddress = farmConfig.quoteTokenAddress.toLowerCase();
+
+      setPairTotalSupply(totalSupply as bigint);
+
+      if (token0Address === tokenAddress && token1Address === quoteTokenAddress) {
+        setPairTokenReserve((reserves as [bigint, bigint, number])[0]);
+        setPairQuoteReserve((reserves as [bigint, bigint, number])[1]);
+      } else if (token0Address === quoteTokenAddress && token1Address === tokenAddress) {
+        setPairTokenReserve((reserves as [bigint, bigint, number])[1]);
+        setPairQuoteReserve((reserves as [bigint, bigint, number])[0]);
+      }
+    } catch {
+      // Leave current reserves in place if public quoting refresh fails.
+    }
+  }, [publicReadProvider]);
 
   const refreshData = useCallback(async () => {
     if (!provider || !rewardsRead || !lpRead || !tokenRead || !quoteTokenRead || !account) {
@@ -498,6 +588,16 @@ export function useFarm(): FarmState {
     setPairTokenReserve(0n);
     setPairQuoteReserve(0n);
   }, [aerodromeReservesData]);
+
+  useEffect(() => {
+    void refreshPublicLiquidityData();
+
+    const interval = window.setInterval(() => {
+      void refreshPublicLiquidityData();
+    }, 10000);
+
+    return () => window.clearInterval(interval);
+  }, [refreshPublicLiquidityData]);
 
   useEffect(() => {
     if (walletTokenBalanceData?.value != null) {
