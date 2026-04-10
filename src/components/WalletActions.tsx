@@ -4,6 +4,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalletConnectTrigger } from "@/components/WalletConnectTrigger";
+import { farmConfig, getAssetHref } from "@/lib/config";
 
 type WalletActionsProps = {
   chainName: string;
@@ -22,7 +23,7 @@ export function WalletActions({
   connected,
   onRefresh,
 }: WalletActionsProps) {
-  const logoSrc = `${import.meta.env.BASE_URL}MBTC_light.png`;
+  const logoSrc = getAssetHref("MBTC_light.png");
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
@@ -42,6 +43,7 @@ export function WalletActions({
               Live Farm
             </Badge>
             <Badge variant="secondary">{chainName}</Badge>
+            <Badge variant="secondary">{farmConfig.dexName}</Badge>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</CardTitle>
           <p className="max-w-2xl text-slate-300">{description}</p>

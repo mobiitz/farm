@@ -4,9 +4,15 @@
 
 :root {
   color-scheme: dark;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
   background: #020617;
   color: #f8fafc;
+  --accent-solid: #6da8ff;
+  --accent-hover: #8bb8ff;
+  --accent-soft: rgba(109, 168, 255, 0.18);
+  --accent-text: #dbeafe;
+  --accent-ring: rgba(109, 168, 255, 0.45);
+  --accent-glow: rgba(109, 168, 255, 0.28);
 }
 
 * {
@@ -26,7 +32,7 @@ body {
   min-width: 320px;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at top, rgba(251, 191, 36, 0.1), transparent 30%),
+    radial-gradient(circle at top, var(--accent-glow), transparent 30%),
     linear-gradient(180deg, #020617 0%, #0f172a 100%);
 }
 

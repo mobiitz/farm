@@ -8,7 +8,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<ButtonVariant, string> = {
   default:
-    "bg-amber-400 text-slate-950 hover:bg-amber-300 disabled:bg-slate-700 disabled:text-slate-400",
+    "bg-[var(--accent-solid)] text-slate-950 hover:bg-[var(--accent-hover)] disabled:bg-slate-700 disabled:text-slate-400",
   secondary:
     "bg-slate-800 text-slate-100 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-500",
   outline:
@@ -18,7 +18,7 @@ const variants: Record<ButtonVariant, string> = {
 export function buttonVariants(variant: ButtonVariant = "default", className?: string) {
   return cn(
     "inline-flex h-11 items-center justify-center whitespace-nowrap rounded-2xl px-4 text-sm font-medium transition-colors",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/60",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-ring)]",
     "disabled:cursor-not-allowed",
     variants[variant],
     className,

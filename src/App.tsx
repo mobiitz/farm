@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { FarmDashboard } from "@/components/FarmDashboard";
+import { LandingPage } from "@/components/LandingPage";
+import { activeFarmKey } from "@/lib/config";
 
 export default function App() {
   useEffect(() => {
@@ -28,6 +30,10 @@ export default function App() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  if (!activeFarmKey) {
+    return <LandingPage />;
+  }
 
   return <FarmDashboard />;
 }

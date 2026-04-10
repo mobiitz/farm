@@ -17,7 +17,7 @@ The frontend includes:
 ## Assumptions
 
 - The original single-file app did not include a real rewards contract address, LP token address, router address, pair address, or confirmed USDC address, so those remain configurable through environment variables.
-- The provided Maga Bitcoin token contract address is included as the default `VITE_TOKEN_ADDRESS`.
+- The provided Maga Bitcoin token contract address is included as the default `VITE_ETH_TOKEN_ADDRESS` and `VITE_BASE_TOKEN_ADDRESS`.
 - The minimal ABIs are preserved from the original file. If your deployed farm contract differs, update `src/lib/abis.ts`.
 - The frontend assumes `18` decimals for both rewards and LP unless you override them in `.env`.
 
@@ -71,14 +71,19 @@ The frontend includes:
 cp .env.example .env
 ```
 
-2. Fill in the values that were placeholders in the original app:
+2. Fill in the values for both deployments:
 
-- `VITE_REWARDS_CONTRACT_ADDRESS`
-- `VITE_LP_TOKEN_ADDRESS`
-- `VITE_QUOTE_TOKEN_ADDRESS`
-- `VITE_V2_ROUTER_ADDRESS`
-- `VITE_V2_POOL_ADDRESS`
-- Decimal values if your deployment does not use `18`
+- `VITE_ETH_REWARDS_CONTRACT_ADDRESS`
+- `VITE_ETH_LP_TOKEN_ADDRESS`
+- `VITE_ETH_QUOTE_TOKEN_ADDRESS`
+- `VITE_ETH_V2_ROUTER_ADDRESS`
+- `VITE_ETH_V2_POOL_ADDRESS`
+- `VITE_BASE_REWARDS_CONTRACT_ADDRESS`
+- `VITE_BASE_LP_TOKEN_ADDRESS`
+- `VITE_BASE_QUOTE_TOKEN_ADDRESS`
+- `VITE_BASE_V2_ROUTER_ADDRESS`
+- `VITE_BASE_V2_POOL_ADDRESS`
+- Decimal values if either deployment does not use `18`
 
 ## Install
 
@@ -123,27 +128,48 @@ To deploy it:
 
 ## Environment Variables
 
-All runtime configuration is read from Vite env vars:
+All runtime configuration is read from Vite env vars, namespaced per deployment:
 
-- `VITE_CHAIN_ID`
-- `VITE_CHAIN_NAME`
-- `VITE_PROJECT_NAME`
-- `VITE_PROJECT_TICKER`
-- `VITE_WALLETCONNECT_PROJECT_ID`
-- `VITE_TOKEN_SYMBOL`
-- `VITE_TOKEN_ADDRESS`
-- `VITE_QUOTE_TOKEN_SYMBOL`
-- `VITE_QUOTE_TOKEN_ADDRESS`
-- `VITE_QUOTE_TOKEN_DECIMALS`
-- `VITE_LP_SYMBOL`
-- `VITE_REWARDS_CONTRACT_ADDRESS`
-- `VITE_LP_TOKEN_ADDRESS`
-- `VITE_V2_ROUTER_ADDRESS`
-- `VITE_V2_POOL_ADDRESS`
-- `VITE_LIQUIDITY_SLIPPAGE_BPS`
-- `VITE_LIQUIDITY_DEADLINE_MINUTES`
-- `VITE_TOKEN_DECIMALS`
-- `VITE_LP_DECIMALS`
+- `VITE_ETH_CHAIN_ID`
+- `VITE_ETH_CHAIN_NAME`
+- `VITE_ETH_PROJECT_NAME`
+- `VITE_ETH_PROJECT_TICKER`
+- `VITE_ETH_WALLETCONNECT_PROJECT_ID`
+- `VITE_ETH_TOKEN_SYMBOL`
+- `VITE_ETH_TOKEN_ADDRESS`
+- `VITE_ETH_QUOTE_TOKEN_SYMBOL`
+- `VITE_ETH_QUOTE_TOKEN_ADDRESS`
+- `VITE_ETH_QUOTE_TOKEN_DECIMALS`
+- `VITE_ETH_LP_SYMBOL`
+- `VITE_ETH_REWARDS_CONTRACT_ADDRESS`
+- `VITE_ETH_LP_TOKEN_ADDRESS`
+- `VITE_ETH_V2_ROUTER_ADDRESS`
+- `VITE_ETH_V2_POOL_ADDRESS`
+- `VITE_ETH_LIQUIDITY_SLIPPAGE_BPS`
+- `VITE_ETH_LIQUIDITY_DEADLINE_MINUTES`
+- `VITE_ETH_TOKEN_DECIMALS`
+- `VITE_ETH_LP_DECIMALS`
+- `VITE_ETH_POOL_STABLE`
+- `VITE_BASE_CHAIN_ID`
+- `VITE_BASE_CHAIN_NAME`
+- `VITE_BASE_PROJECT_NAME`
+- `VITE_BASE_PROJECT_TICKER`
+- `VITE_BASE_WALLETCONNECT_PROJECT_ID`
+- `VITE_BASE_TOKEN_SYMBOL`
+- `VITE_BASE_TOKEN_ADDRESS`
+- `VITE_BASE_QUOTE_TOKEN_SYMBOL`
+- `VITE_BASE_QUOTE_TOKEN_ADDRESS`
+- `VITE_BASE_QUOTE_TOKEN_DECIMALS`
+- `VITE_BASE_LP_SYMBOL`
+- `VITE_BASE_REWARDS_CONTRACT_ADDRESS`
+- `VITE_BASE_LP_TOKEN_ADDRESS`
+- `VITE_BASE_V2_ROUTER_ADDRESS`
+- `VITE_BASE_V2_POOL_ADDRESS`
+- `VITE_BASE_LIQUIDITY_SLIPPAGE_BPS`
+- `VITE_BASE_LIQUIDITY_DEADLINE_MINUTES`
+- `VITE_BASE_TOKEN_DECIMALS`
+- `VITE_BASE_LP_DECIMALS`
+- `VITE_BASE_POOL_STABLE`
 
 ## Notes For Deployment
 

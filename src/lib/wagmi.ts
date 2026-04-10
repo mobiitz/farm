@@ -8,7 +8,7 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { http } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { base, mainnet } from "wagmi/chains";
 import { farmConfig } from "@/lib/config";
 
 export const wagmiConfig = getDefaultConfig({
@@ -16,9 +16,10 @@ export const wagmiConfig = getDefaultConfig({
   appDescription: `${farmConfig.projectName} LP farm for ${farmConfig.projectTicker}.`,
   appUrl: "https://mobiitz.github.io/farm/",
   projectId: farmConfig.walletConnectProjectId,
-  chains: [mainnet],
+  chains: [mainnet, base],
   transports: {
     [mainnet.id]: http(),
+    [base.id]: http(),
   },
   wallets: [
     {

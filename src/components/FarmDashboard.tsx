@@ -1,5 +1,6 @@
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
-import { Coins, Droplets, Gift } from "lucide-react";
+import { ArrowLeft, Coins, Droplets, Gift } from "lucide-react";
 import { LiquidityPanel } from "@/components/LiquidityPanel";
 import { MetricCard } from "@/components/MetricCard";
 import { ProgramInfoCard } from "@/components/ProgramInfoCard";
@@ -8,7 +9,7 @@ import { StakePanel } from "@/components/StakePanel";
 import { StatusAlert } from "@/components/StatusAlert";
 import { WalletActions } from "@/components/WalletActions";
 import { useFarm } from "@/hooks/useFarm";
-import { farmConfig } from "@/lib/config";
+import { farmConfig, getLandingHref } from "@/lib/config";
 import {
   formatDateTime,
   formatUnitsSafe,
@@ -16,16 +17,49 @@ import {
 
 export function FarmDashboard() {
   const farm = useFarm();
+  const landingHref = getLandingHref();
+  const themeStyle = {
+    "--accent-solid": farmConfig.theme.accentSolid,
+    "--accent-hover": farmConfig.theme.accentHover,
+    "--accent-soft": farmConfig.theme.accentSoft,
+    "--accent-text": farmConfig.theme.accentText,
+    "--accent-ring": farmConfig.theme.accentRing,
+    "--accent-glow": farmConfig.theme.accentGlow,
+  } as CSSProperties;
 
   return (
-    <div className="min-h-screen min-h-[calc(var(--app-height,1vh)*100)] overflow-x-hidden bg-slate-950 bg-farm-grid px-4 py-6 text-slate-50 sm:px-6 sm:py-8 md:px-10 md:py-10">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-amber-300/10 to-transparent" />
+    <div
+      className="min-h-screen min-h-[calc(var(--app-height,1vh)*100)] overflow-x-hidden bg-farm-grid px-4 py-6 text-slate-50 sm:px-6 sm:py-8 md:px-10 md:py-10"
+      style={{
+        ...themeStyle,
+        backgroundImage: [
+          `radial-gradient(circle at top, ${farmConfig.theme.pageGlow}, transparent 28%)`,
+          `radial-gradient(circle at bottom right, ${farmConfig.theme.pageGlowSecondary}, transparent 30%)`,
+          `linear-gradient(180deg, ${farmConfig.theme.pageFrom} 0%, ${farmConfig.theme.pageTo} 100%)`,
+        ].join(", "),
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-64"
+        style={{
+          background: `linear-gradient(180deg, ${farmConfig.theme.accentGlow}, transparent)`,
+        }}
+      />
       <div className="relative mx-auto grid max-w-6xl gap-4 sm:gap-6">
+        <div className="flex justify-start">
+          <a
+            href={landingHref}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950/70 px-4 py-2 text-sm text-slate-300 transition-colors hover:border-[color:var(--accent-ring)] hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Farm Selection
+          </a>
+        </div>
         <div className="grid gap-4 md:grid-cols-[1.4fr_0.6fr]">
           <WalletActions
             chainName={farmConfig.chainName}
             title={`${farmConfig.projectName} Farm`}
-            description={`Add liquidity, stake your ${farmConfig.lpSymbol}, and earn ${farmConfig.tokenSymbol} rewards over time.`}
+            description={`Add liquidity on ${farmConfig.dexName}, stake your ${farmConfig.lpSymbol}, and earn ${farmConfig.tokenSymbol} rewards over time.`}
             busy={farm.busy}
             connected={Boolean(farm.account)}
             onRefresh={farm.refreshData}

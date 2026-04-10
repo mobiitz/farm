@@ -1,5 +1,6 @@
 import { Contract, type BrowserProvider, type JsonRpcSigner } from "ethers";
 import {
+  AERODROME_ROUTER_ABI,
   ERC20_ABI,
   REWARDS_ABI,
   UNISWAP_V2_PAIR_ABI,
@@ -36,5 +37,8 @@ export function getTokenWriteContract(address: string, signer: JsonRpcSigner) {
 }
 
 export function getV2RouterWriteContract(signer: JsonRpcSigner) {
-  return new Contract(farmConfig.v2RouterAddress, UNISWAP_V2_ROUTER_ABI, signer);
+  const routerAbi =
+    farmConfig.dexType === "aerodrome" ? AERODROME_ROUTER_ABI : UNISWAP_V2_ROUTER_ABI;
+
+  return new Contract(farmConfig.v2RouterAddress, routerAbi, signer);
 }

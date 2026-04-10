@@ -24,6 +24,11 @@ export const UNISWAP_V2_ROUTER_ABI = [
   "function removeLiquidity(address tokenA,address tokenB,uint liquidity,uint amountAMin,uint amountBMin,address to,uint deadline) returns (uint amountA,uint amountB)",
 ] as const;
 
+export const AERODROME_ROUTER_ABI = [
+  "function addLiquidity(address tokenA,address tokenB,bool stable,uint amountADesired,uint amountBDesired,uint amountAMin,uint amountBMin,address to,uint deadline) returns (uint amountA,uint amountB,uint liquidity)",
+  "function removeLiquidity(address tokenA,address tokenB,bool stable,uint liquidity,uint amountAMin,uint amountBMin,address to,uint deadline) returns (uint amountA,uint amountB)",
+] as const;
+
 export const UNISWAP_V2_PAIR_ABI = [
   "function token0() view returns (address)",
   "function token1() view returns (address)",

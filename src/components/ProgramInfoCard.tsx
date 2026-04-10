@@ -38,12 +38,12 @@ export function ProgramInfoCard({
           <span className="text-right">{programEnds}</span>
         </div>
         <div className="flex items-start justify-between gap-4">
-          <span>MBTC Contract</span>
+          <span>{farmConfig.tokenSymbol} Contract</span>
           <div className="text-right">
             <button
               type="button"
               onClick={copyAddress}
-              className="break-all text-amber-300 underline underline-offset-4"
+              className="break-all text-[var(--accent-text)] underline underline-offset-4"
             >
               {farmConfig.tokenAddress}
             </button>

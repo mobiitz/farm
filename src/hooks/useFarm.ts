@@ -526,16 +526,29 @@ export function useFarm(): FarmState {
         `Adding ${farmConfig.tokenSymbol}/${farmConfig.quoteTokenSymbol} liquidity...`,
       );
 
-      const tx = await v2RouterWrite.addLiquidity(
-        farmConfig.tokenAddress,
-        farmConfig.quoteTokenAddress,
-        amountTokenDesired,
-        amountQuoteDesired,
-        amountTokenMin,
-        amountQuoteMin,
-        account,
-        deadline,
-      );
+      const tx =
+        farmConfig.dexType === "aerodrome"
+          ? await v2RouterWrite.addLiquidity(
+              farmConfig.tokenAddress,
+              farmConfig.quoteTokenAddress,
+              farmConfig.isStablePool,
+              amountTokenDesired,
+              amountQuoteDesired,
+              amountTokenMin,
+              amountQuoteMin,
+              account,
+              deadline,
+            )
+          : await v2RouterWrite.addLiquidity(
+              farmConfig.tokenAddress,
+              farmConfig.quoteTokenAddress,
+              amountTokenDesired,
+              amountQuoteDesired,
+              amountTokenMin,
+              amountQuoteMin,
+              account,
+              deadline,
+            );
 
       await tx.wait();
       setStatus("Liquidity added. Your LP tokens are ready to stake.");
@@ -582,15 +595,27 @@ export function useFarm(): FarmState {
       setBusy(true);
       setStatus(`Removing ${farmConfig.lpSymbol} liquidity...`);
 
-      const tx = await v2RouterWrite.removeLiquidity(
-        farmConfig.tokenAddress,
-        farmConfig.quoteTokenAddress,
-        liquidity,
-        amountTokenMin,
-        amountQuoteMin,
-        account,
-        deadline,
-      );
+      const tx =
+        farmConfig.dexType === "aerodrome"
+          ? await v2RouterWrite.removeLiquidity(
+              farmConfig.tokenAddress,
+              farmConfig.quoteTokenAddress,
+              farmConfig.isStablePool,
+              liquidity,
+              amountTokenMin,
+              amountQuoteMin,
+              account,
+              deadline,
+            )
+          : await v2RouterWrite.removeLiquidity(
+              farmConfig.tokenAddress,
+              farmConfig.quoteTokenAddress,
+              liquidity,
+              amountTokenMin,
+              amountQuoteMin,
+              account,
+              deadline,
+            );
 
       await tx.wait();
       setStatus(`Liquidity removed. ${farmConfig.tokenSymbol} and ${farmConfig.quoteTokenSymbol} returned to your wallet.`);
