@@ -8,7 +8,7 @@ import {
 } from "ethers";
 import { useAccount, useBalance, useReadContracts } from "wagmi";
 import { farmConfig } from "@/lib/config";
-import { REWARDS_ABI } from "@/lib/abis";
+import { AERODROME_ROUTER_ABI, REWARDS_ABI } from "@/lib/abis";
 import {
   getLpReadContract,
   getTokenReadContract,
@@ -79,6 +79,7 @@ export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
   const rewardsContractReady = isAddress(farmConfig.rewardsContractAddress);
   const pairContractReady = isAddress(farmConfig.v2PoolAddress);
+  const routerContractReady = isAddress(farmConfig.v2RouterAddress);
   const {
     data: publicProgramInfoData,
   } = useReadContracts({
@@ -164,6 +165,57 @@ export function useFarm(): FarmState {
     allowFailure: true,
     query: {
       enabled: pairContractReady,
+      refetchInterval: 10000,
+    },
+  });
+  const { data: aerodromeRouterFactoryData } = useReadContracts({
+    contracts:
+      farmConfig.dexType === "aerodrome" && routerContractReady
+        ? [
+            {
+              address: farmConfig.v2RouterAddress as `0x${string}`,
+              abi: AERODROME_ROUTER_ABI,
+              chainId: farmConfig.chainId,
+              functionName: "defaultFactory",
+            },
+          ]
+        : [],
+    allowFailure: true,
+    query: {
+      enabled: farmConfig.dexType === "aerodrome" && routerContractReady,
+      refetchInterval: 10000,
+    },
+  });
+  const aerodromeFactoryAddress =
+    aerodromeRouterFactoryData?.[0]?.status === "success" &&
+    typeof aerodromeRouterFactoryData[0].result === "string" &&
+    isAddress(aerodromeRouterFactoryData[0].result)
+      ? (aerodromeRouterFactoryData[0].result as `0x${string}`)
+      : undefined;
+  const { data: aerodromeReservesData } = useReadContracts({
+    contracts:
+      farmConfig.dexType === "aerodrome" && routerContractReady && aerodromeFactoryAddress
+        ? [
+            {
+              address: farmConfig.v2RouterAddress as `0x${string}`,
+              abi: AERODROME_ROUTER_ABI,
+              chainId: farmConfig.chainId,
+              functionName: "getReserves",
+              args: [
+                farmConfig.tokenAddress as `0x${string}`,
+                farmConfig.quoteTokenAddress as `0x${string}`,
+                farmConfig.isStablePool,
+                aerodromeFactoryAddress,
+              ],
+            },
+          ]
+        : [],
+    allowFailure: true,
+    query: {
+      enabled:
+        farmConfig.dexType === "aerodrome" &&
+        routerContractReady &&
+        Boolean(aerodromeFactoryAddress),
       refetchInterval: 10000,
     },
   });
@@ -397,6 +449,10 @@ export function useFarm(): FarmState {
       setPairTotalSupply(pairTotalSupplyResult.result);
     }
 
+    if (farmConfig.dexType === "aerodrome") {
+      return;
+    }
+
     if (
       pairToken0Result?.status === "success" &&
       pairToken1Result?.status === "success" &&
@@ -425,6 +481,23 @@ export function useFarm(): FarmState {
     setPairTokenReserve(0n);
     setPairQuoteReserve(0n);
   }, [publicPairData]);
+
+  useEffect(() => {
+    if (farmConfig.dexType !== "aerodrome") {
+      return;
+    }
+
+    const reserveResult = aerodromeReservesData?.[0];
+    if (reserveResult?.status === "success") {
+      const reserves = reserveResult.result as [bigint, bigint];
+      setPairTokenReserve(reserves[0]);
+      setPairQuoteReserve(reserves[1]);
+      return;
+    }
+
+    setPairTokenReserve(0n);
+    setPairQuoteReserve(0n);
+  }, [aerodromeReservesData]);
 
   useEffect(() => {
     if (walletTokenBalanceData?.value != null) {
