@@ -248,11 +248,11 @@ export function useFarm(): FarmState {
   );
   const tokenRead = useMemo(
     () => (provider ? getTokenReadContract(farmConfig.tokenAddress, provider) : null),
-    [provider],
+    [farmConfig.tokenAddress, provider],
   );
   const quoteTokenRead = useMemo(
     () => (provider ? getTokenReadContract(farmConfig.quoteTokenAddress, provider) : null),
-    [provider],
+    [farmConfig.quoteTokenAddress, provider],
   );
   const rewardsWrite = useMemo(
     () => (signer ? getRewardsWriteContract(farmConfig, signer) : null),
@@ -264,11 +264,11 @@ export function useFarm(): FarmState {
   );
   const tokenWrite = useMemo(
     () => (signer ? getTokenWriteContract(farmConfig.tokenAddress, signer) : null),
-    [signer],
+    [farmConfig.tokenAddress, signer],
   );
   const quoteTokenWrite = useMemo(
     () => (signer ? getTokenWriteContract(farmConfig.quoteTokenAddress, signer) : null),
-    [signer],
+    [farmConfig.quoteTokenAddress, signer],
   );
   const v2RouterWrite = useMemo(
     () => (signer ? getV2RouterWriteContract(farmConfig, signer) : null),
@@ -277,7 +277,7 @@ export function useFarm(): FarmState {
   const publicReadProvider = useMemo(() => {
     const rpcUrl = PUBLIC_RPC_URLS[farmConfig.chainId];
     return rpcUrl ? new JsonRpcProvider(rpcUrl) : null;
-  }, []);
+  }, [farmConfig.chainId]);
 
   const refreshPublicLiquidityData = useCallback(async () => {
     if (!publicReadProvider) {
@@ -352,7 +352,7 @@ export function useFarm(): FarmState {
     } catch {
       // Leave current reserves in place if public quoting refresh fails.
     }
-  }, [publicReadProvider]);
+  }, [farmConfig, publicReadProvider]);
 
   const refreshData = useCallback(async () => {
     if (!provider || !rewardsRead || !lpRead || !tokenRead || !quoteTokenRead || !account) {
@@ -445,6 +445,8 @@ export function useFarm(): FarmState {
     }
   }, [
     account,
+    farmConfig.rewardsContractAddress,
+    farmConfig.v2RouterAddress,
     lpRead,
     provider,
     quoteTokenRead,
@@ -454,6 +456,30 @@ export function useFarm(): FarmState {
     walletQuoteTokenBalanceData,
     walletTokenBalanceData,
   ]);
+
+  useEffect(() => {
+    setWalletLpBalance(0n);
+    setWalletTokenBalance(0n);
+    setWalletQuoteTokenBalance(0n);
+    setStakedBalance(0n);
+    setEarnedRewards(0n);
+    setRewardRate(0n);
+    setPeriodFinish(0n);
+    setAllowance(0n);
+    setTokenAllowanceToRouter(0n);
+    setQuoteTokenAllowanceToRouter(0n);
+    setLpAllowanceToRouter(0n);
+    setTotalStaked(0n);
+    setPairTotalSupply(0n);
+    setPairTokenReserve(0n);
+    setPairQuoteReserve(0n);
+    setLiquidityTokenInput("");
+    setLiquidityQuoteInput("");
+    setRemoveLiquidityInput("");
+    setStakeInput("");
+    setWithdrawInput("");
+    setLastLiquidityInputSide(null);
+  }, [farmConfig.key]);
 
   useEffect(() => {
     if (!publicProgramInfoData?.length) {
@@ -527,7 +553,12 @@ export function useFarm(): FarmState {
 
     setPairTokenReserve(0n);
     setPairQuoteReserve(0n);
-  }, [publicPairData]);
+  }, [
+    farmConfig.dexType,
+    farmConfig.quoteTokenAddress,
+    farmConfig.tokenAddress,
+    publicPairData,
+  ]);
 
   useEffect(() => {
     void refreshPublicLiquidityData();
@@ -565,7 +596,7 @@ export function useFarm(): FarmState {
 
     const quotedAmount = (amountIn * pairQuoteReserve) / pairTokenReserve;
     return formatUnitsSafe(quotedAmount, farmConfig.quoteTokenDecimals, 8);
-  }, [pairQuoteReserve, pairTokenReserve]);
+  }, [farmConfig.quoteTokenDecimals, farmConfig.tokenDecimals, pairQuoteReserve, pairTokenReserve]);
 
   const tokenFromQuoteInput = useCallback((value: string) => {
     const amountIn = parseInputToUnitsSafe(value, farmConfig.quoteTokenDecimals);
@@ -575,7 +606,7 @@ export function useFarm(): FarmState {
 
     const quotedAmount = (amountIn * pairTokenReserve) / pairQuoteReserve;
     return formatUnitsSafe(quotedAmount, farmConfig.tokenDecimals, 8);
-  }, [pairQuoteReserve, pairTokenReserve]);
+  }, [farmConfig.quoteTokenDecimals, farmConfig.tokenDecimals, pairQuoteReserve, pairTokenReserve]);
 
   const handleLiquidityTokenInput = useCallback((value: string) => {
     setLastLiquidityInputSide("token");
@@ -942,29 +973,29 @@ export function useFarm(): FarmState {
 
   const fillMaxStake = useCallback(() => {
     setStakeInput(formatUnitsSafe(walletLpBalance, farmConfig.lpDecimals, 8));
-  }, [walletLpBalance]);
+  }, [farmConfig.lpDecimals, walletLpBalance]);
 
   const fillMaxWithdraw = useCallback(() => {
     setWithdrawInput(formatUnitsSafe(stakedBalance, farmConfig.lpDecimals, 8));
-  }, [stakedBalance]);
+  }, [farmConfig.lpDecimals, stakedBalance]);
 
   const fillMaxLiquidityToken = useCallback(() => {
     const nextValue = formatUnitsSafe(walletTokenBalance, farmConfig.tokenDecimals, 8);
     setLastLiquidityInputSide("token");
     setLiquidityTokenInput(nextValue);
     setLiquidityQuoteInput(quoteFromTokenInput(nextValue));
-  }, [quoteFromTokenInput, walletTokenBalance]);
+  }, [farmConfig.tokenDecimals, quoteFromTokenInput, walletTokenBalance]);
 
   const fillMaxLiquidityQuote = useCallback(() => {
     const nextValue = formatUnitsSafe(walletQuoteTokenBalance, farmConfig.quoteTokenDecimals, 8);
     setLastLiquidityInputSide("quote");
     setLiquidityQuoteInput(nextValue);
     setLiquidityTokenInput(tokenFromQuoteInput(nextValue));
-  }, [tokenFromQuoteInput, walletQuoteTokenBalance]);
+  }, [farmConfig.quoteTokenDecimals, tokenFromQuoteInput, walletQuoteTokenBalance]);
 
   const fillMaxRemoveLiquidity = useCallback(() => {
     setRemoveLiquidityInput(formatUnitsSafe(walletLpBalance, farmConfig.lpDecimals, 8));
-  }, [walletLpBalance]);
+  }, [farmConfig.lpDecimals, walletLpBalance]);
 
   useEffect(() => {
     if (!account) {
@@ -1005,7 +1036,7 @@ export function useFarm(): FarmState {
           : `Wrong network. Please switch to ${farmConfig.chainName}.`;
       setStatus(message);
     });
-  }, [address, chain?.id, isConnected, switchChainAsync]);
+  }, [address, chain?.id, farmConfig.chainId, farmConfig.chainName, isConnected, switchChainAsync]);
 
   useEffect(() => {
     if (!isConnected || !connector || !address) {
@@ -1063,7 +1094,7 @@ export function useFarm(): FarmState {
     return () => {
       cancelled = true;
     };
-  }, [address, chain?.id, connector, isConnected]);
+  }, [address, chain?.id, connector, farmConfig.chainId, farmConfig.chainName, isConnected]);
 
   const hasApproval = allowance > 0n;
   const requiredTokenApproval = parseInputToUnitsSafe(
