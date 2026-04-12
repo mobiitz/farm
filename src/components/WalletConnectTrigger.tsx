@@ -1,8 +1,13 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Wallet } from "lucide-react";
+import { useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
+import { useActiveFarmConfig } from "@/lib/config";
 
 export function WalletConnectTrigger() {
+  const farmConfig = useActiveFarmConfig();
+  const { switchChainAsync } = useSwitchChain();
+
   return (
     <ConnectButton.Custom>
       {({
@@ -15,6 +20,7 @@ export function WalletConnectTrigger() {
       }) => {
         const ready = mounted;
         const connected = ready && account && chain;
+        const wrongFarmNetwork = Boolean(connected && chain.id !== farmConfig.chainId);
 
         if (!connected) {
           return (
@@ -25,11 +31,19 @@ export function WalletConnectTrigger() {
           );
         }
 
-        if (chain.unsupported) {
+        if (chain.unsupported || wrongFarmNetwork) {
           return (
-            <Button onClick={openChainModal} variant="outline" className="w-full sm:w-auto">
+            <Button
+              onClick={() => {
+                void switchChainAsync({ chainId: farmConfig.chainId }).catch(() => {
+                  openChainModal();
+                });
+              }}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
               <Wallet className="mr-2 h-4 w-4" />
-              Wrong Network
+              {`Switch to ${farmConfig.chainName}`}
             </Button>
           );
         }

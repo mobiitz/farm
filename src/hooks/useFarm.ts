@@ -620,6 +620,26 @@ export function useFarm(): FarmState {
     setLiquidityTokenInput(tokenFromQuoteInput(value));
   }, [tokenFromQuoteInput]);
 
+  const ensureCorrectNetwork = useCallback(async () => {
+    if ((chain?.id ?? farmConfig.chainId) === farmConfig.chainId) {
+      return true;
+    }
+
+    try {
+      setStatus(`Switching wallet to ${farmConfig.chainName}...`);
+      await switchChainAsync({ chainId: farmConfig.chainId });
+      setStatus(`Wallet switched to ${farmConfig.chainName}. Retry your action.`);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : `Wrong network. Please switch to ${farmConfig.chainName}.`;
+      setStatus(message);
+    }
+
+    return false;
+  }, [chain?.id, farmConfig.chainId, farmConfig.chainName, switchChainAsync]);
+
   useEffect(() => {
     if (lastLiquidityInputSide === "token") {
       setLiquidityQuoteInput(quoteFromTokenInput(liquidityTokenInput));
@@ -643,6 +663,10 @@ export function useFarm(): FarmState {
       return;
     }
 
+    if (!(await ensureCorrectNetwork())) {
+      return;
+    }
+
     try {
       setBusy(true);
       setStatus("Sending LP approval...");
@@ -656,11 +680,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [lpWrite, refreshData]);
+  }, [ensureCorrectNetwork, lpWrite, refreshData]);
 
   const approveTokenForRouter = useCallback(async () => {
     if (!tokenWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -677,11 +705,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [refreshData, tokenWrite]);
+  }, [ensureCorrectNetwork, refreshData, tokenWrite]);
 
   const approveQuoteTokenForRouter = useCallback(async () => {
     if (!quoteTokenWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -701,11 +733,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [quoteTokenWrite, refreshData]);
+  }, [ensureCorrectNetwork, quoteTokenWrite, refreshData]);
 
   const approveLpForRouter = useCallback(async () => {
     if (!lpWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -722,11 +758,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [lpWrite, refreshData]);
+  }, [ensureCorrectNetwork, lpWrite, refreshData]);
 
   const addLiquidity = useCallback(async () => {
     if (!v2RouterWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -795,11 +835,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [account, liquidityQuoteInput, liquidityTokenInput, refreshData, v2RouterWrite]);
+  }, [account, ensureCorrectNetwork, liquidityQuoteInput, liquidityTokenInput, refreshData, v2RouterWrite]);
 
   const removeLiquidity = useCallback(async () => {
     if (!v2RouterWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -868,12 +912,17 @@ export function useFarm(): FarmState {
     pairTokenReserve,
     refreshData,
     removeLiquidityInput,
+    ensureCorrectNetwork,
     v2RouterWrite,
   ]);
 
   const stakeLp = useCallback(async () => {
     if (!rewardsWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -898,11 +947,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [refreshData, rewardsWrite, stakeInput]);
+  }, [ensureCorrectNetwork, refreshData, rewardsWrite, stakeInput]);
 
   const withdrawLp = useCallback(async () => {
     if (!rewardsWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -927,11 +980,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [refreshData, rewardsWrite, withdrawInput]);
+  }, [ensureCorrectNetwork, refreshData, rewardsWrite, withdrawInput]);
 
   const claimRewards = useCallback(async () => {
     if (!rewardsWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -948,11 +1005,15 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [refreshData, rewardsWrite]);
+  }, [ensureCorrectNetwork, refreshData, rewardsWrite]);
 
   const exitFarm = useCallback(async () => {
     if (!rewardsWrite) {
       setStatus("Connect wallet first.");
+      return;
+    }
+
+    if (!(await ensureCorrectNetwork())) {
       return;
     }
 
@@ -969,7 +1030,7 @@ export function useFarm(): FarmState {
     } finally {
       setBusy(false);
     }
-  }, [refreshData, rewardsWrite]);
+  }, [ensureCorrectNetwork, refreshData, rewardsWrite]);
 
   const fillMaxStake = useCallback(() => {
     setStakeInput(formatUnitsSafe(walletLpBalance, farmConfig.lpDecimals, 8));
