@@ -219,24 +219,24 @@ export function LandingPage() {
                 animate={{ opacity: 1, y: 0, transition: { delay: 0.05 } }}
               >
                 <Card
-                  className="group relative overflow-hidden border border-red-500/30 bg-slate-950/85 shadow-[0_0_0_1px_rgba(239,68,68,0.08),0_0_28px_rgba(239,68,68,0.12)]"
+                  className="group relative overflow-hidden border border-emerald-500/30 bg-slate-950/85 shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_0_28px_rgba(16,185,129,0.12)]"
                   style={cardThemeStyle("#0a4ecb", "rgba(10,78,203,0.34)")}
                 >
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--card-glow),transparent_42%),linear-gradient(180deg,rgba(6,16,31,0.8)_0%,rgba(2,6,23,0.98)_100%)]" />
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/60 to-transparent" />
-                  <div className="pointer-events-none absolute right-5 top-5 h-3 w-3 rounded-full bg-red-500 shadow-[0_0_18px_rgba(239,68,68,0.85)] animate-pulse" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+                  <div className="pointer-events-none absolute right-5 top-5 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.85)]" />
                   <CardContent className="relative grid gap-6 p-6 sm:p-8">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full border border-[#0a4ecb]/40 bg-[#0a4ecb]/15 px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-[#dbeafe]">
                           Base
                         </span>
-                        <div className="inline-flex items-center gap-2 rounded-full border border-red-500/35 bg-red-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-red-300">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-emerald-300">
                           <span className="relative flex h-2.5 w-2.5">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
                           </span>
-                          Launching Soon
+                          Live Farm
                         </div>
                       </div>
                       <ArrowUpRight className="h-5 w-5 text-[#8fb5ff]" />
@@ -284,17 +284,16 @@ export function LandingPage() {
                         Rewards Ready
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      disabled
+                    <a
+                      href={baseHref}
                       className={buttonVariants(
                         "default",
                         "w-full justify-between rounded-2xl text-base shadow-[0_14px_35px_rgba(10,78,203,0.24)]",
                       )}
                     >
-                      <span>Launching Soon</span>
+                      <span>Enter MBTC Base Farm</span>
                       <ChevronRight className="h-4 w-4" />
-                    </button>
+                    </a>
                   </CardContent>
                 </Card>
               </motion.div>
