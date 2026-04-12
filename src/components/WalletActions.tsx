@@ -4,7 +4,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalletConnectTrigger } from "@/components/WalletConnectTrigger";
-import { farmConfig, getAssetHref } from "@/lib/config";
+import { getAssetHref, useActiveFarmConfig } from "@/lib/config";
 
 type WalletActionsProps = {
   chainName: string;
@@ -23,6 +23,7 @@ export function WalletActions({
   connected,
   onRefresh,
 }: WalletActionsProps) {
+  const farmConfig = useActiveFarmConfig();
   const logoSrc = getAssetHref("MBTC_light.png");
 
   return (

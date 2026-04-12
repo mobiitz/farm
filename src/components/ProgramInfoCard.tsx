@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { farmConfig } from "@/lib/config";
+import { useActiveFarmConfig } from "@/lib/config";
 
 type ProgramInfoCardProps = {
   totalStaked: string;
@@ -11,6 +11,7 @@ export function ProgramInfoCard({
   totalStaked,
   programEnds,
 }: ProgramInfoCardProps) {
+  const farmConfig = useActiveFarmConfig();
   const [copied, setCopied] = useState(false);
 
   async function copyAddress() {

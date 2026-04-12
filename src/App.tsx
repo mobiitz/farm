@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { FarmDashboard } from "@/components/FarmDashboard";
 import { LandingPage } from "@/components/LandingPage";
-import { activeFarmKey } from "@/lib/config";
+import { useActiveFarmKey } from "@/lib/config";
 
 export default function App() {
+  const activeFarmKey = useActiveFarmKey();
+
   useEffect(() => {
     function syncViewport() {
       const viewportHeight = window.innerHeight * 0.01;
@@ -35,5 +37,5 @@ export default function App() {
     return <LandingPage />;
   }
 
-  return <FarmDashboard />;
+  return <FarmDashboard key={activeFarmKey} />;
 }

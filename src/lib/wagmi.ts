@@ -9,7 +9,9 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import { http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
-import { farmConfig } from "@/lib/config";
+import { getActiveFarmConfig } from "@/lib/config";
+
+const farmConfig = getActiveFarmConfig();
 
 export const wagmiConfig = getDefaultConfig({
   appName: `${farmConfig.projectName} Farm`,

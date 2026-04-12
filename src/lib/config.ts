@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 function getEnv(name: string, fallback: string) {
   const raw = import.meta.env[name];
   if (typeof raw !== "string") {
@@ -55,6 +57,9 @@ function normalizePath(pathname: string) {
 
   return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 }
+
+const NAVIGATION_EVENT = "mbtcfarm:navigation";
+let historyPatched = false;
 
 export type FarmKey = "eth" | "base";
 
@@ -194,6 +199,58 @@ export const farmConfigs = {
   base: createFarmConfig("base"),
 } as const;
 
+function getPathnameSnapshot() {
+  return typeof window !== "undefined" ? window.location.pathname : "/";
+}
+
+function dispatchNavigationEvent() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(NAVIGATION_EVENT));
+}
+
+function ensureHistoryPatched() {
+  if (typeof window === "undefined" || historyPatched) {
+    return;
+  }
+
+  for (const method of ["pushState", "replaceState"] as const) {
+    const original = window.history[method] as (
+      data: unknown,
+      unused: string,
+      url?: string | URL | null,
+    ) => void;
+    window.history[method] = ((data: unknown, unused: string, url?: string | URL | null) => {
+      const result = original.call(window.history, data, unused, url);
+      dispatchNavigationEvent();
+      return result;
+    }) as History[typeof method];
+  }
+
+  historyPatched = true;
+}
+
+function subscribeToPathname(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  ensureHistoryPatched();
+  window.addEventListener("popstate", onStoreChange);
+  window.addEventListener(NAVIGATION_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener("popstate", onStoreChange);
+    window.removeEventListener(NAVIGATION_EVENT, onStoreChange);
+  };
+}
+
+export function usePathname() {
+  return useSyncExternalStore(subscribeToPathname, getPathnameSnapshot, () => "/");
+}
+
 export function getFarmKeyFromPath(pathname: string): FarmKey | null {
   const normalized = normalizePath(pathname);
 
@@ -206,6 +263,22 @@ export function getFarmKeyFromPath(pathname: string): FarmKey | null {
   }
 
   return null;
+}
+
+export function getActiveFarmKey(pathname?: string) {
+  return getFarmKeyFromPath(pathname ?? getPathnameSnapshot());
+}
+
+export function getActiveFarmConfig(pathname?: string) {
+  return farmConfigs[getActiveFarmKey(pathname) ?? "eth"];
+}
+
+export function useActiveFarmKey() {
+  return getActiveFarmKey(usePathname());
+}
+
+export function useActiveFarmConfig() {
+  return getActiveFarmConfig(usePathname());
 }
 
 export function getAppRootPath(pathname: string) {
@@ -243,8 +316,3 @@ export function getAssetHref(assetName: string, pathname?: string) {
     pathname ?? (typeof window !== "undefined" ? window.location.pathname : "/");
   return `${getAppRootPath(currentPath)}${assetName}`;
 }
-
-export const activeFarmKey =
-  typeof window !== "undefined" ? getFarmKeyFromPath(window.location.pathname) : null;
-
-export const farmConfig = farmConfigs[activeFarmKey ?? "eth"];

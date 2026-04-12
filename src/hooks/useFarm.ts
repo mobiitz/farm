@@ -9,7 +9,7 @@ import {
   type Eip1193Provider,
 } from "ethers";
 import { useAccount, useBalance, useReadContracts, useSwitchChain } from "wagmi";
-import { farmConfig } from "@/lib/config";
+import { useActiveFarmConfig } from "@/lib/config";
 import {
   AERODROME_ROUTER_ABI,
   REWARDS_ABI,
@@ -87,6 +87,7 @@ const PUBLIC_RPC_URLS: Record<number, string> = {
 };
 
 export function useFarm(): FarmState {
+  const farmConfig = useActiveFarmConfig();
   const { address, connector, chain, isConnected } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const lastAutoSwitchAttemptRef = useRef<string | null>(null);
@@ -238,10 +239,13 @@ export function useFarm(): FarmState {
     useState<LiquidityInputSide>(null);
 
   const rewardsRead = useMemo(
-    () => (provider ? getRewardsReadContract(provider) : null),
-    [provider],
+    () => (provider ? getRewardsReadContract(farmConfig, provider) : null),
+    [farmConfig, provider],
   );
-  const lpRead = useMemo(() => (provider ? getLpReadContract(provider) : null), [provider]);
+  const lpRead = useMemo(
+    () => (provider ? getLpReadContract(farmConfig, provider) : null),
+    [farmConfig, provider],
+  );
   const tokenRead = useMemo(
     () => (provider ? getTokenReadContract(farmConfig.tokenAddress, provider) : null),
     [provider],
@@ -251,10 +255,13 @@ export function useFarm(): FarmState {
     [provider],
   );
   const rewardsWrite = useMemo(
-    () => (signer ? getRewardsWriteContract(signer) : null),
-    [signer],
+    () => (signer ? getRewardsWriteContract(farmConfig, signer) : null),
+    [farmConfig, signer],
   );
-  const lpWrite = useMemo(() => (signer ? getLpWriteContract(signer) : null), [signer]);
+  const lpWrite = useMemo(
+    () => (signer ? getLpWriteContract(farmConfig, signer) : null),
+    [farmConfig, signer],
+  );
   const tokenWrite = useMemo(
     () => (signer ? getTokenWriteContract(farmConfig.tokenAddress, signer) : null),
     [signer],
@@ -264,8 +271,8 @@ export function useFarm(): FarmState {
     [signer],
   );
   const v2RouterWrite = useMemo(
-    () => (signer ? getV2RouterWriteContract(signer) : null),
-    [signer],
+    () => (signer ? getV2RouterWriteContract(farmConfig, signer) : null),
+    [farmConfig, signer],
   );
   const publicReadProvider = useMemo(() => {
     const rpcUrl = PUBLIC_RPC_URLS[farmConfig.chainId];

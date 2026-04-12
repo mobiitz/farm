@@ -9,13 +9,14 @@ import { StakePanel } from "@/components/StakePanel";
 import { StatusAlert } from "@/components/StatusAlert";
 import { WalletActions } from "@/components/WalletActions";
 import { useFarm } from "@/hooks/useFarm";
-import { farmConfig, getLandingHref } from "@/lib/config";
+import { getLandingHref, useActiveFarmConfig } from "@/lib/config";
 import {
   formatDateTime,
   formatUnitsSafe,
 } from "@/lib/format";
 
 export function FarmDashboard() {
+  const farmConfig = useActiveFarmConfig();
   const farm = useFarm();
   const landingHref = getLandingHref();
   const themeStyle = {
