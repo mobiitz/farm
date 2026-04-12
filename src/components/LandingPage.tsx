@@ -137,6 +137,7 @@ export function LandingPage() {
                 >
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--card-glow),transparent_42%),linear-gradient(180deg,rgba(8,20,38,0.84)_0%,rgba(2,6,23,0.98)_100%)]" />
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6da8ff]/60 to-transparent" />
+                  <div className="pointer-events-none absolute right-5 top-5 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.85)]" />
                   <CardContent className="relative grid gap-6 p-6 sm:p-8">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-wrap items-center gap-2">
