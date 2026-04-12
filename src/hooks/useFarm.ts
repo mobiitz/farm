@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BrowserProvider,
   Contract,
@@ -8,7 +8,7 @@ import {
   isAddress,
   type Eip1193Provider,
 } from "ethers";
-import { useAccount, useBalance, useReadContracts } from "wagmi";
+import { useAccount, useBalance, useReadContracts, useSwitchChain } from "wagmi";
 import { farmConfig } from "@/lib/config";
 import {
   AERODROME_ROUTER_ABI,
@@ -88,6 +88,8 @@ const PUBLIC_RPC_URLS: Record<number, string> = {
 
 export function useFarm(): FarmState {
   const { address, connector, chain, isConnected } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const lastAutoSwitchAttemptRef = useRef<string | null>(null);
   const rewardsContractReady = isAddress(farmConfig.rewardsContractAddress);
   const pairContractReady = isAddress(farmConfig.v2PoolAddress);
   const {
@@ -970,6 +972,33 @@ export function useFarm(): FarmState {
 
     return () => window.clearInterval(interval);
   }, [account, refreshData]);
+
+  useEffect(() => {
+    if (!isConnected || !address) {
+      lastAutoSwitchAttemptRef.current = null;
+      return;
+    }
+
+    if ((chain?.id ?? farmConfig.chainId) === farmConfig.chainId) {
+      lastAutoSwitchAttemptRef.current = null;
+      return;
+    }
+
+    const attemptKey = `${address}:${farmConfig.chainId}`;
+    if (lastAutoSwitchAttemptRef.current === attemptKey) {
+      return;
+    }
+
+    lastAutoSwitchAttemptRef.current = attemptKey;
+
+    void switchChainAsync({ chainId: farmConfig.chainId }).catch((error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : `Wrong network. Please switch to ${farmConfig.chainName}.`;
+      setStatus(message);
+    });
+  }, [address, chain?.id, isConnected, switchChainAsync]);
 
   useEffect(() => {
     if (!isConnected || !connector || !address) {
