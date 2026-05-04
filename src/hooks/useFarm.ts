@@ -642,12 +642,18 @@ export function useFarm(): FarmState {
 
   useEffect(() => {
     if (lastLiquidityInputSide === "token") {
-      setLiquidityQuoteInput(quoteFromTokenInput(liquidityTokenInput));
+      const nextQuoteValue = quoteFromTokenInput(liquidityTokenInput);
+      if (nextQuoteValue !== liquidityQuoteInput) {
+        setLiquidityQuoteInput(nextQuoteValue);
+      }
       return;
     }
 
     if (lastLiquidityInputSide === "quote") {
-      setLiquidityTokenInput(tokenFromQuoteInput(liquidityQuoteInput));
+      const nextTokenValue = tokenFromQuoteInput(liquidityQuoteInput);
+      if (nextTokenValue !== liquidityTokenInput) {
+        setLiquidityTokenInput(nextTokenValue);
+      }
     }
   }, [
     lastLiquidityInputSide,

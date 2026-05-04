@@ -16,7 +16,7 @@ const farmConfig = getActiveFarmConfig();
 export const wagmiConfig = getDefaultConfig({
   appName: `${farmConfig.projectName} Farm`,
   appDescription: `${farmConfig.projectName} LP farm for ${farmConfig.projectTicker}.`,
-  appUrl: "https://mobiitz.github.io/farm/",
+  appUrl: "https://farm.mbtc.us",
   projectId: farmConfig.walletConnectProjectId,
   chains: [mainnet, base],
   transports: {
