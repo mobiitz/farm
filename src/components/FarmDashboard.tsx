@@ -110,13 +110,6 @@ export function FarmDashboard() {
           />
         </div>
 
-        <FarmProgressCard
-          title="Farm Progress"
-          steps={progressSteps}
-        />
-
-        <StatusAlert status={farm.status} />
-
         <div className="grid gap-6 md:grid-cols-2">
           <MetricCard
             icon={<Gift className="h-5 w-5" />}
@@ -132,6 +125,13 @@ export function FarmDashboard() {
             delay={0.05}
           />
         </div>
+
+        <FarmProgressCard
+          title="Farm sign-up progress bar"
+          steps={progressSteps}
+        />
+
+        <StatusAlert status={farm.status} />
 
         <LiquidityPanel
           tokenSymbol={farmConfig.tokenSymbol}
