@@ -51,8 +51,11 @@ export function LiquidityPanel({
           <CardTitle className="text-lg sm:text-xl">Add {tokenSymbol}/{quoteTokenSymbol} Liquidity</CardTitle>
           <p className="text-sm text-slate-300">
             Here you can add to the liquidity pool, in order to get LP Stake tokens for
-            earning {tokenSymbol} rewards with. After these 3 steps are complete,
+            earning {tokenSymbol} rewards with. After these 2 steps are complete,
             continue to the &quot;Stake LP&quot; section below, you&apos;re almost there!
+          </p>
+          <p className="text-sm text-slate-400">
+            Step 2 only works after both token approvals in Step 1 are confirmed by your wallet.
           </p>
           <p className="break-all text-xs text-slate-400">Pool: {poolAddress}</p>
         </CardHeader>
@@ -108,11 +111,11 @@ export function LiquidityPanel({
             >
               {hasQuoteApproval ? (
                 <>
-                  <strong>Step 2.</strong>&nbsp;{quoteTokenSymbol} Approved
+                  <strong>Step 1.</strong>&nbsp;{quoteTokenSymbol} Approved
                 </>
               ) : (
                 <>
-                  <strong>Step 2.</strong>&nbsp;Approve {quoteTokenSymbol}
+                  <strong>Step 1.</strong>&nbsp;Approve {quoteTokenSymbol}
                 </>
               )}
             </Button>
@@ -121,7 +124,7 @@ export function LiquidityPanel({
               disabled={busy || !connected || !hasTokenApproval || !hasQuoteApproval}
               className="h-auto min-h-11 w-full whitespace-normal py-3 text-center sm:col-span-2 lg:col-span-1"
             >
-              <strong>Step 3.</strong>&nbsp;Add Liquidity
+              <strong>Step 2.</strong>&nbsp;Add Liquidity
             </Button>
           </div>
         </CardContent>

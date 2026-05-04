@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Coins, Droplets, Gift } from "lucide-react";
+import { ArrowLeft, Droplets, Gift } from "lucide-react";
+import { FarmProgressCard } from "@/components/FarmProgressCard";
 import { LiquidityPanel } from "@/components/LiquidityPanel";
 import { MetricCard } from "@/components/MetricCard";
 import { ProgramInfoCard } from "@/components/ProgramInfoCard";
@@ -19,6 +20,42 @@ export function FarmDashboard() {
   const farmConfig = useActiveFarmConfig();
   const farm = useFarm();
   const landingHref = getLandingHref();
+  const walletLpDisplay = formatUnitsSafe(farm.walletLpBalance, farmConfig.lpDecimals);
+  const stakedLpDisplay = formatUnitsSafe(farm.stakedBalance, farmConfig.lpDecimals);
+  const hasWalletLp = farm.walletLpBalance > 0n;
+  const hasStakedLp = farm.stakedBalance > 0n;
+  const hasLpPosition = hasWalletLp || hasStakedLp;
+  const hasFarmApproval = farm.allowance > 0n || hasStakedLp;
+  const progressSteps = [
+    {
+      title: "Connect wallet",
+      description: farm.account
+        ? `Wallet connected on ${farmConfig.chainName}.`
+        : `Connect a wallet on ${farmConfig.chainName} to begin.`,
+      complete: Boolean(farm.account),
+    },
+    {
+      title: "Confirm approvals",
+      description: hasFarmApproval
+        ? `${farmConfig.lpSymbol} is approved for staking.`
+        : `Approve ${farmConfig.lpSymbol} for the farm contract before staking.`,
+      complete: hasFarmApproval,
+    },
+    {
+      title: "Add liquidity",
+      description: hasLpPosition
+        ? `${walletLpDisplay} wallet LP and ${stakedLpDisplay} staked LP detected.`
+        : `Finish both token approvals, then add ${farmConfig.tokenSymbol}/${farmConfig.quoteTokenSymbol} liquidity to receive ${farmConfig.lpSymbol}.`,
+      complete: hasLpPosition,
+    },
+    {
+      title: "Stake LP",
+      description: hasStakedLp
+        ? `${stakedLpDisplay} ${farmConfig.lpSymbol} currently staked.`
+        : `Stake LP to start earning ${farmConfig.tokenSymbol} rewards.`,
+      complete: hasStakedLp,
+    },
+  ];
   const themeStyle = {
     "--accent-solid": farmConfig.theme.accentSolid,
     "--accent-hover": farmConfig.theme.accentHover,
@@ -71,29 +108,24 @@ export function FarmDashboard() {
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <FarmProgressCard
+          title="Farm Progress"
+          steps={progressSteps}
+        />
+
+        <div className="grid gap-6 md:grid-cols-2">
           <MetricCard
-            icon={<Coins className="h-5 w-5" />}
-            title={`Wallet ${farmConfig.tokenSymbol}`}
-            value={formatUnitsSafe(farm.walletTokenBalance, farmConfig.tokenDecimals)}
+            icon={<Gift className="h-5 w-5" />}
+            title="Earned Rewards"
+            value={formatUnitsSafe(farm.earnedRewards, farmConfig.tokenDecimals)}
             subtitle={farmConfig.tokenSymbol}
           />
           <MetricCard
-            icon={<Coins className="h-5 w-5" />}
-            title={`Wallet ${farmConfig.quoteTokenSymbol}`}
-            value={formatUnitsSafe(
-              farm.walletQuoteTokenBalance,
-              farmConfig.quoteTokenDecimals,
-            )}
-            subtitle={farmConfig.quoteTokenSymbol}
-            delay={0.05}
-          />
-          <MetricCard
-            icon={<Coins className="h-5 w-5" />}
-            title="Wallet LP"
-            value={formatUnitsSafe(farm.walletLpBalance, farmConfig.lpDecimals)}
+            icon={<Droplets className="h-5 w-5" />}
+            title="Staked LP"
+            value={stakedLpDisplay}
             subtitle={farmConfig.lpSymbol}
-            delay={0.1}
+            delay={0.05}
           />
         </div>
 
@@ -120,23 +152,6 @@ export function FarmDashboard() {
           onApproveQuoteToken={farm.approveQuoteTokenForRouter}
           onAddLiquidity={farm.addLiquidity}
         />
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <MetricCard
-            icon={<Droplets className="h-5 w-5" />}
-            title="Staked LP"
-            value={formatUnitsSafe(farm.stakedBalance, farmConfig.lpDecimals)}
-            subtitle="Deposited in farm"
-            delay={0}
-          />
-          <MetricCard
-            icon={<Gift className="h-5 w-5" />}
-            title="Earned Rewards"
-            value={formatUnitsSafe(farm.earnedRewards, farmConfig.tokenDecimals)}
-            subtitle={farmConfig.tokenSymbol}
-            delay={0.05}
-          />
-        </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
