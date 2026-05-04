@@ -24,8 +24,8 @@ export function FarmDashboard() {
   const stakedLpDisplay = formatUnitsSafe(farm.stakedBalance, farmConfig.lpDecimals);
   const hasWalletLp = farm.walletLpBalance > 0n;
   const hasStakedLp = farm.stakedBalance > 0n;
-  const hasLpPosition = hasWalletLp || hasStakedLp;
-  const hasFarmApproval = farm.allowance > 0n || hasStakedLp;
+  const hasRouterApprovals =
+    farm.tokenAllowanceToRouter > 0n && farm.quoteTokenAllowanceToRouter > 0n;
   const progressSteps = [
     {
       title: "Connect wallet",
@@ -36,23 +36,25 @@ export function FarmDashboard() {
     },
     {
       title: "Confirm approvals",
-      description: hasFarmApproval
-        ? `${farmConfig.lpSymbol} is approved for staking.`
-        : `Approve ${farmConfig.lpSymbol} for the farm contract before staking.`,
-      complete: hasFarmApproval,
+      description: hasRouterApprovals
+        ? `${farmConfig.tokenSymbol} and ${farmConfig.quoteTokenSymbol} approvals are ready for the router.`
+        : `Confirm both ${farmConfig.tokenSymbol} and ${farmConfig.quoteTokenSymbol} approvals before adding liquidity.`,
+      complete: hasRouterApprovals,
     },
     {
       title: "Add liquidity",
-      description: hasLpPosition
-        ? `${walletLpDisplay} wallet LP and ${stakedLpDisplay} staked LP detected.`
-        : `Finish both token approvals, then add ${farmConfig.tokenSymbol}/${farmConfig.quoteTokenSymbol} liquidity to receive ${farmConfig.lpSymbol}.`,
-      complete: hasLpPosition,
+      description: hasWalletLp
+        ? `${walletLpDisplay} ${farmConfig.lpSymbol} is now in your wallet and ready to stake.`
+        : hasRouterApprovals
+          ? `Approvals are ready. Add ${farmConfig.tokenSymbol}/${farmConfig.quoteTokenSymbol} liquidity to mint fresh ${farmConfig.lpSymbol}.`
+          : `Finish both token approvals, then add ${farmConfig.tokenSymbol}/${farmConfig.quoteTokenSymbol} liquidity to receive ${farmConfig.lpSymbol}.`,
+      complete: hasWalletLp,
     },
     {
       title: "Stake LP",
       description: hasStakedLp
-        ? `${stakedLpDisplay} ${farmConfig.lpSymbol} currently staked.`
-        : `Stake LP to start earning ${farmConfig.tokenSymbol} rewards.`,
+        ? `${stakedLpDisplay} ${farmConfig.lpSymbol} currently staked. Add more liquidity any time to create more LP to stake.`
+        : `Stake wallet LP to start earning ${farmConfig.tokenSymbol} rewards.`,
       complete: hasStakedLp,
     },
   ];
@@ -112,6 +114,8 @@ export function FarmDashboard() {
           title="Farm Progress"
           steps={progressSteps}
         />
+
+        <StatusAlert status={farm.status} />
 
         <div className="grid gap-6 md:grid-cols-2">
           <MetricCard
@@ -195,8 +199,6 @@ export function FarmDashboard() {
             />
           </motion.div>
         </div>
-
-        <StatusAlert status={farm.status} />
 
         <RemoveLiquidityPanel
           lpBalance={formatUnitsSafe(farm.walletLpBalance, farmConfig.lpDecimals)}
